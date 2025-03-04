@@ -1,0 +1,87 @@
+.product-list {
+  color: #333;
+  font-family: Arial, sans-serif; // Ensuring a clean and modern font
+
+  .table {
+    padding: 10px;
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
+
+    .search {
+      width: 100%;
+      max-width: 300px;
+      padding: 8px;
+      border: 1px solid #3ABB94; // Teal border for consistency
+      border-radius: 5px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+
+      &:focus {
+        border-color: #1d3557; // Dark blue focus color
+        box-shadow: 0 0 0 2px rgba(58, 187, 148, 0.2);
+      }
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 1.2rem;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+
+      thead {
+        background-color: #3ABB94; // Teal header for a modern look
+        color: white;
+        text-transform: uppercase;
+
+        th {
+          padding: 12px;
+          border-bottom: 2px solid #2a8b72;
+        }
+      }
+
+      th,
+      td {
+        vertical-align: middle;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .icons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        > * {
+          cursor: pointer;
+          font-size: 1.2rem;
+          transition: transform 0.2s ease, color 0.2s ease;
+
+          &:hover {
+            transform: scale(1.1);
+            color: #3ABB94; // Teal hover effect
+          }
+        }
+      }
+
+      tr {
+        transition: background-color 0.3s ease;
+
+        &:nth-child(even) {
+          background-color: #f9f9f9;
+        }
+
+        &:hover {
+          cursor: pointer;
+          background-color: rgba(31, 147, 255, 0.2);
+        }
+      }
+    }
+  }
+}
