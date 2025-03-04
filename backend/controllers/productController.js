@@ -1,6 +1,13 @@
 const asyncHandler = require("express-async-handler");
 const Product = require("../models/productModel");
+
+const path = require('path');
+console.log("Looking for fileUpload at:", path.join(__dirname, '../utils/fileUpload.js'));
+console.log("Exists:", require('fs').existsSync(path.join(__dirname, '../utils/fileUpload.js')));
+
 const { fileSizeFormatter } = require("../utils/fileUpload");
+
+
 const cloudinary = require("cloudinary").v2;
 
 // Create Prouct
@@ -115,7 +122,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     let uploadedFile;
     try {
       uploadedFile = await cloudinary.uploader.upload(req.file.path, {
-        folder: "Pinvent App",
+        folder: "stockmate",
         resource_type: "image",
       });
     } catch (error) {

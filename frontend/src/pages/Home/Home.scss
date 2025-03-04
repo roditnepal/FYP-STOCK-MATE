@@ -1,0 +1,88 @@
+.home {
+  background-color: #030b6b;
+  min-height: 100vh;
+
+  & nav {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    color: #fff;
+    
+    & > .logo {
+      color: #fff;
+    }
+  }
+}
+
+.home-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  & li a {
+    color: #fff;
+  }
+
+  & > * {
+    margin-left: 1rem;
+    color: #fff;
+    text-decoration: none;  // Ensures no link underlines by default
+  }
+}
+
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;  // Adds spacing between text and image for better layout
+
+  @media screen and (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.hero-text {
+  width: 50%;
+  
+  & > * {
+    color: #fff;
+    margin-bottom: 2rem;
+  }
+  
+  & > h2 span {
+    display: block;
+  }
+  
+  & .hero-buttons a {
+    color: #fff;
+    text-decoration: none;  // Ensures no underline on the buttons
+    background-color: var(--light-blue);  // Adds a background color to buttons for visibility
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: #0275d8;  // Slightly darker on hover
+    }
+  }
+}
+
+.hero-image {
+  width: 50%;
+
+  img {
+    width: 100%;  // Ensures the image is responsive
+    object-fit: cover;  // Ensures the image scales properly without distortion
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .hero-text {
+    width: 100%;
+    margin: auto;
+    text-align: center;
+  }
+
+  .hero-image {
+    width: 100%;
+  }
+}

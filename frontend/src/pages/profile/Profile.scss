@@ -1,0 +1,54 @@
+.profile {
+  .card {
+    max-width: 700px;
+    display: flex;
+    justify-content: flex-start;
+    padding: 1rem 0;
+    margin: auto;  // Center the card horizontally
+
+    span.profile-photo {
+      text-align: center;
+    }
+
+    img {
+      width: 100%;
+      max-width: 350px;
+      padding-right: 1rem;
+      padding-left: 1rem;
+      border-radius: 5px;  // Added rounded corners for a smoother look
+    }
+
+    span.profile-data {
+      margin: 0 1rem;
+      display: flex;
+      flex-direction: column;  // Aligns the data vertically for a better layout
+    }
+
+    span.profile-data > * {
+      border-top: 1px solid #ccc;
+      padding: 5px 0;
+      font-size: 1.6rem;  // Added font size for better readability
+    }
+
+    span.profile-data > *:first-child {
+      border-top: none;  // Removes the top border from the first child for cleaner look
+    }
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .card {
+    flex-direction: column;  // Stacks profile image and data on small screens
+    align-items: center;  // Centers everything on smaller screens
+    text-align: center;  // Ensures text is centered when stacked
+  }
+
+  span.profile-photo {
+    margin: auto;
+    padding-bottom: 1rem;  // Adds some space below the profile image
+  }
+
+  span.profile-data {
+    margin: 1rem 0;  // Adds space around the profile data on smaller screens
+  }
+}

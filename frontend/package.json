@@ -1,28 +1,38 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
-  },
+  "version": "1.0.0",
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cloudinary/react": "^1.13.1",
+    "@reduxjs/toolkit": "^2.5.1",
+    "axios": "^1.7.9",
+    "cloudinary": "^2.5.1",
+    "crypto-browserify": "^3.12.1",
+    "dompurify": "^3.2.4",
+    "https-browserify": "^1.0.0",
+    "path-browserify": "^1.0.1",
+    "querystring-es3": "^0.2.1",
+    "quill": "^2.0.3",
+    "react-confirm-alert": "^3.0.6",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.4.0",
+    "react-paginate": "^8.3.0",
+    "react-quill": "^2.0.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.1.5",
+    "react-scripts": "^5.0.1",
+    "react-toastify": "^11.0.3",
+    "sass": "^1.85.0",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.4"
   },
   "browserslist": {
     "production": [

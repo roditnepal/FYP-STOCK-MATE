@@ -1,0 +1,45 @@
+.product-summary {
+  width: 100%;
+  font-family: Arial, sans-serif;
+
+  .info-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; // Adds spacing between cards
+  }
+}
+
+.card {
+  border: 2px solid #ddd;
+  padding: 1.2rem;
+  background-color: #f5f6fa;
+  border-radius: 8px; // Rounded corners for a modern look
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); // Subtle shadow
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Unique card styles
+.card1 {
+  background-color: #b624ff;
+  color: #fff;
+}
+
+.card2 {
+  background-color: #32963d;
+  color: #fff;
+}
+
+.card3 {
+  background-color: #c41849;
+  color: #fff;
+}
+
+.card4 {
+  background-color: #03a5fc;
+  color: #fff;
+}

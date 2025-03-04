@@ -1,0 +1,33 @@
+.search {
+  margin: 8px 0;
+  position: relative;
+  flex: 1;
+  max-width: 400px; // Set a reasonable max-width for better responsiveness
+
+  .icon {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    color: #777; // Subtle icon color
+    font-size: 1.4rem; // Adjust icon size for better visibility
+  }
+
+  input[type="text"] {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 400;
+    padding: 0.8rem;
+    padding-left: 3rem;
+    width: 100%;
+    border: 2px solid #3ABB94; // Teal border for a fresh look
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:focus {
+      border-color: #1d3557; // Darker blue for focus
+      box-shadow: 0 0 5px rgba(58, 187, 148, 0.5);
+    }
+  }
+}

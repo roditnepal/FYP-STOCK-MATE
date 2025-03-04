@@ -1,0 +1,48 @@
+.product-detail {
+  margin-bottom: 5rem;
+  width: 100%;
+  max-width: 500px;
+  font-family: Arial, sans-serif; // Ensuring a clean font
+
+  .card {
+    width: 100%;
+    max-width: 500px;
+    padding: 1.5rem;
+    border: 2px solid #3ABB94; // Teal border for consistency
+    border-radius: 8px; // Rounded corners for modern design
+    background-color: white; // Clean white background
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-3px); // Slight lift on hover
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); // Enhanced shadow on hover
+    }
+  }
+
+  .detail {
+    & > * {
+      margin-bottom: 1rem;
+    }
+
+    .badge {
+      background-color: #e63946; // Updated to a vibrant red for warnings
+      color: #fff;
+      padding: 3px 6px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    p b {
+      color: #1d3557; // Deep blue color for emphasis
+    }
+  }
+}
+
+.group {
+  border: 2px solid #1d3557; // Dark blue border for better contrast
+  padding: 8px;
+  border-radius: 6px; // Soft rounded edges for a polished look
+  background-color: rgba(29, 53, 87, 0.05); // Light background for subtle contrast
+}
