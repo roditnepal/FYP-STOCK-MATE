@@ -42,11 +42,82 @@ const productSchema = mongoose.Schema(
       type: Object,
       default: {},
     },
+    expiryDate: {
+      type: Date,
+      required: false,
+    },
+    isExpiringSoon: {
+      type: Boolean,
+      default: false,
+    },
+    createdBy: {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      date: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    editedBy: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        name: {
+          type: String,
+        },
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    deletedBy: {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      name: {
+        type: String,
+      },
+      date: {
+        type: Date,
+      },
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Add a method to check if product is expiring soon (within 30 days)
+productSchema.methods.checkExpiringSoon = function () {
+  if (!this.expiryDate) return false;
+
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  return this.expiryDate <= thirtyDaysFromNow;
+};
+
+// Pre-save middleware to update isExpiringSoon
+productSchema.pre("save", function (next) {
+  if (this.expiryDate) {
+    this.isExpiringSoon = this.checkExpiringSoon();
+  }
+  next();
+});
 
 const Product = mongoose.model("Product", productSchema);
 module.exports = Product;

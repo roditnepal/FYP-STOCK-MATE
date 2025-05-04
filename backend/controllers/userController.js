@@ -2,45 +2,63 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { get } = require("mongoose");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
-const sendEmail = require("../utils/sendEmail");  // Assuming you have a utility to send emails
+const mongoose = require("mongoose");
+const sendEmail = require("../utils/sendEmail");
+const { uploadToCloudinary } = require("../utils/cloudinaryUpload");
 
 // Function to generate a token
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-    });
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 };
 
 // Register user
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body;
+  const { name, email, password, role, categories } = req.body;
 
+  try {
     // Validation
     if (!name || !email || !password) {
-        res.status(400);
-        throw new Error("Please fill all the fields");
+      res.status(400);
+      throw new Error("Please fill all the fields");
     }
 
     if (password.length < 6) {
-        res.status(400);
-        throw new Error("Password should be at least 6 characters");
+      res.status(400);
+      throw new Error("Password should be at least 6 characters");
     }
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-        res.status(400);
-        throw new Error("User already exists");
+      res.status(400);
+      throw new Error("User already exists");
+    }
+
+    // Handle Photo upload
+    let photo = "https://i.ibb.co/4pDNDk1/avatar.png"; // Default photo
+    if (req.file) {
+      try {
+        const fileData = await uploadToCloudinary(req.file, "StockMate/Users");
+        photo = fileData.filePath;
+      } catch (error) {
+        console.error("Cloudinary upload error:", error);
+        res.status(500);
+        throw new Error(`Image could not be uploaded: ${error.message}`);
+      }
     }
 
     // Create user
     const user = await User.create({
-        name,
-        email,
-        password,
+      name,
+      email,
+      password,
+      photo,
+      role: role || "employee",
+      categories: categories || [],
     });
 
     // Generate token
@@ -48,45 +66,52 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // Send http-only cookie
     res.cookie("token", token, {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 864000), // 1 day
-        sameSite: "none",
-        secure: true,
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
     });
 
     if (user) {
-        const { _id, name, email, phone, photo, bio } = user;
-        res.status(201).json({
-            _id,
-            name,
-            email,
-            phone,
-            photo,
-            bio,
-            token,
-        });
+      const { _id, name, email, phone, photo, bio, role, categories } = user;
+      res.status(201).json({
+        _id,
+        name,
+        email,
+        phone,
+        photo,
+        bio,
+        role,
+        categories,
+        token,
+      });
     } else {
-        res.status(400);
-        throw new Error("Invalid user data");
+      res.status(400);
+      throw new Error("Invalid user data");
     }
+  } catch (error) {
+    console.error("Error registering user:", error);
+    throw error;
+  }
 });
 
 // Login user
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
+  try {
     // Validation
     if (!email || !password) {
-        res.status(400);
-        throw new Error("Please fill all the fields");
+      res.status(400);
+      throw new Error("Please fill all the fields");
     }
 
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-        res.status(400);
-        throw new Error("Invalid credentials");
+      res.status(400);
+      throw new Error("Invalid credentials");
     }
 
     // Check if password matches
@@ -97,120 +122,189 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Send http-only cookie
     res.cookie("token", token, {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 864000), // 1 day
-        sameSite: "none",
-        secure: true,
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
     });
 
     if (user && passwordIsCorrect) {
-        const { _id, name, email, phone, photo, bio } = user;
-        res.status(200).json({
-            _id,
-            name,
-            email,
-            phone,
-            photo,
-            bio,
-            token,
-        });
+      const { _id, name, email, phone, photo, bio, role, categories } = user;
+      res.status(200).json({
+        _id,
+        name,
+        email,
+        phone,
+        photo,
+        bio,
+        role,
+        categories,
+        token,
+      });
     } else {
-        res.status(400);
-        throw new Error("Invalid email or password");
+      res.status(400);
+      throw new Error("Invalid email or password");
     }
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    throw error;
+  }
 });
 
 // Logout user
 const logout = asyncHandler(async (req, res) => {
+  try {
     res.cookie("token", "", {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(0),
-        sameSite: "none",
-        secure: true,
+      path: "/",
+      httpOnly: true,
+      expires: new Date(0),
+      sameSite: "none",
+      secure: true,
     });
     return res.status(200).json({
-        message: "Logged out",
+      message: "Logged out",
     });
+  } catch (error) {
+    console.error("Error logging out user:", error);
+    res.status(500);
+    throw new Error("Failed to log out");
+  }
 });
 
 // Get user data
 const getUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
-
-    if (user) {
-        const { _id, name, email, phone, photo, bio } = user;
-        res.status(200).json({
-            _id,
-            name,
-            email,
-            phone,
-            photo,
-            bio,
-        });
-    } else {
-        res.status(404);
-        throw new Error("User not found");
+  try {
+    // Validate ObjectID
+    if (!mongoose.isValidObjectId(req.user._id)) {
+      res.status(400);
+      throw new Error("Invalid user ID format");
     }
+
+    const user = await User.findById(req.user._id);
+    if (user) {
+      const { _id, name, email, phone, photo, bio, role, categories } = user;
+      res.status(200).json({
+        _id,
+        name,
+        email,
+        phone,
+        photo,
+        bio,
+        role,
+        categories,
+      });
+    } else {
+      res.status(404);
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    console.error(`Error fetching user ${req.user._id}:`, error);
+    throw error;
+  }
 });
 
 // Get login status
 const loginStatus = asyncHandler(async (req, res) => {
+  try {
     const token = req.cookies.token;
     if (!token) {
-        return res.json(false);
+      return res.json(false);
     }
     // Verify token
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     if (verified) {
-        return res.json(true);
+      return res.json(true);
     }
     return res.json(false);
+  } catch (error) {
+    console.error("Error checking login status:", error);
+    return res.json(false);
+  }
 });
 
 // Update user data
 const updateUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
-
-    if (user) {
-        const { name, email, phone, photo, bio } = user;
-        user.email = email;
-        user.name = req.body.name || name;
-        user.phone = req.body.phone || phone;
-        user.photo = req.body.photo || photo;
-        user.bio = req.body.bio || bio;
-
-        const updatedUser = await user.save();
-        res.status(200).json({
-            _id: updatedUser._id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            phone: updatedUser.phone,
-            photo: updatedUser.photo,
-            bio: updatedUser.bio,
-        });
-    } else {
-        res.status(404);
-        throw new Error("User not found");
+  try {
+    // Validate ObjectID
+    if (!mongoose.isValidObjectId(req.user._id)) {
+      res.status(400);
+      throw new Error("Invalid user ID format");
     }
+
+    const user = await User.findById(req.user._id);
+    if (user) {
+      const { name, email, phone, photo: existingPhoto, bio, role, categories } = user;
+      user.email = email; // Email is immutable
+      user.name = req.body.name || name;
+      user.phone = req.body.phone || phone;
+      user.bio = req.body.bio || bio;
+
+      // Handle Photo upload
+      if (req.file) {
+        try {
+          const fileData = await uploadToCloudinary(req.file, "StockMate/Users");
+          user.photo = fileData.filePath;
+        } catch (error) {
+          console.error("Cloudinary upload error:", error);
+          res.status(500);
+          throw new Error(`Image could not be uploaded: ${error.message}`);
+        }
+      } else {
+        user.photo = req.body.photo || existingPhoto;
+      }
+
+      // Only admin can update role and categories
+      if (req.user.role === "admin" && req.body.role) {
+        user.role = req.body.role;
+      }
+
+      if (req.user.role === "admin" && req.body.categories) {
+        user.categories = req.body.categories;
+      }
+
+      const updatedUser = await user.save();
+      res.status(200).json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        photo: updatedUser.photo,
+        bio: updatedUser.bio,
+        role: updatedUser.role,
+        categories: updatedUser.categories,
+      });
+    } else {
+      res.status(404);
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    console.error(`Error updating user ${req.user._id}:`, error);
+    throw error;
+  }
 });
 
 // Change password
 const changepassword = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
+  try {
+    // Validate ObjectID
+    if (!mongoose.isValidObjectId(req.user._id)) {
+      res.status(400);
+      throw new Error("Invalid user ID format");
+    }
 
+    const user = await User.findById(req.user._id);
     const { oldpassword, newpassword } = req.body;
 
     if (!user) {
-        res.status(400);
-        throw new Error("User not found");
+      res.status(404);
+      throw new Error("User not found");
     }
 
     // Validation
     if (!oldpassword || !newpassword) {
-        res.status(400);
-        throw new Error("Please fill all the fields");
+      res.status(400);
+      throw new Error("Please fill all the fields");
     }
 
     // Check if password matches
@@ -218,29 +312,35 @@ const changepassword = asyncHandler(async (req, res) => {
 
     // Save new password
     if (user && passwordIsCorrect) {
-        const salt = await bcrypt.genSalt(10); // Generate salt
-        user.password = await bcrypt.hash(newpassword, salt); // Hash new password before saving
-        await user.save();
-        res.status(200).send("Password changed successfully");
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newpassword, salt);
+      await user.save();
+      res.status(200).json({ message: "Password changed successfully" });
     } else {
-        res.status(400);
-        throw new Error("Old password is incorrect");
+      res.status(400);
+      throw new Error("Old password is incorrect");
     }
+  } catch (error) {
+    console.error(`Error changing password for user ${req.user._id}:`, error);
+    throw error;
+  }
 });
 
 // Forgot password
 const forgetpassword = asyncHandler(async (req, res) => {
-    const { email } = req.body;
+  const { email } = req.body;
+
+  try {
     const user = await User.findOne({ email });
     if (!user) {
-        res.status(404);
-        throw new Error("User not found");
+      res.status(404);
+      throw new Error("User not found");
     }
 
     // Delete any existing reset token
     let token = await Token.findOne({ userId: user._id });
     if (token) {
-        await token.deleteOne(token._id);
+      await token.deleteOne();
     }
 
     // Generate reset token
@@ -251,10 +351,10 @@ const forgetpassword = asyncHandler(async (req, res) => {
 
     // Save reset token
     await new Token({
-        userId: user._id,
-        token: hashedToken,
-        createdAt: Date.now(),
-        expireAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+      userId: user._id,
+      token: hashedToken,
+      createdAt: Date.now(),
+      expireAt: Date.now() + 30 * 60 * 1000, // 30 minutes
     }).save();
 
     // Construct reset URL
@@ -262,64 +362,68 @@ const forgetpassword = asyncHandler(async (req, res) => {
 
     // Reset email
     const message = `<h2>Hello ${user.name}</h2>
-    <p>You requested for password reset. Please use the URL below to reset your password.</p>
-    <p>This reset link is valid for 30 minutes</p>
-    <a href=${resetURL} clicktracking=off>${resetURL}</a>
-
-    <p>Regards,</p>
-    <p>Stock Mate Team</p>`;
+      <p>You requested for password reset. Please use the URL below to reset your password.</p>
+      <p>This reset link is valid for 30 minutes</p>
+      <a href=${resetURL} clicktracking=off>${resetURL}</a>
+      <p>Regards,</p>
+      <p>Stock Mate Team</p>`;
 
     const subject = "Password Reset Request (STOCKMATE)";
     const send_to = user.email;
     const send_from = process.env.EMAIL_USER;
 
-    try {
-        await sendEmail(subject, message, send_to, send_from, send_from);
-        res.status(200).json({ success: true, message: "Reset email sent" });
-    } catch (error) {
-        res.status(500);
-        throw new Error("Email could not be sent. Please try again later");
-    }
+    await sendEmail(subject, message, send_to, send_from, send_from);
+    res.status(200).json({ success: true, message: "Reset email sent" });
+  } catch (error) {
+    console.error("Error sending reset email:", error);
+    res.status(500);
+    throw new Error("Email could not be sent. Please try again later");
+  }
 });
 
 // Reset password
 const resetpassword = asyncHandler(async (req, res) => {
-    const { password } = req.body;
-    const { resetToken } = req.params;
+  const { password } = req.body;
+  const { resetToken } = req.params;
 
+  try {
     // Hash token and compare with the hashed token in the database
     const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
 
     // Find token in DB
     const userToken = await Token.findOne({
-        token: hashedToken,
-        expireAt: { $gt: Date.now() },
+      token: hashedToken,
+      expireAt: { $gt: Date.now() },
     });
 
     if (!userToken) {
-        res.status(400);
-        throw new Error("Invalid or expired reset token");
+      res.status(400);
+      throw new Error("Invalid or expired reset token");
     }
 
     // Find user
     const user = await User.findOne({ _id: userToken.userId });
-    const salt = await bcrypt.genSalt(10); // Generate salt
-    user.password = await bcrypt.hash(password, salt); // Hash password before saving
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
     await user.save();
 
     res.status(200).json({
-        message: "Password reset successful",
+      message: "Password reset successful",
     });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    throw error;
+  }
 });
 
 module.exports = {
-    registerUser,
-    loginUser,
-    logout,
-    getUser,
-    loginStatus,
-    updateUser,
-    changepassword,
-    forgetpassword,
-    resetpassword,
+  registerUser,
+  loginUser,
+  logout,
+  getUser,
+  loginStatus,
+  updateUser,
+  changepassword,
+  forgetpassword,
+  resetpassword,
 };
