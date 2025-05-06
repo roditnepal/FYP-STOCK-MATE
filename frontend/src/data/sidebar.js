@@ -1,7 +1,13 @@
-import { FaTh, FaRegChartBar, FaCommentAlt } from "react-icons/fa";
+import {
+  FaTh,
+  FaRegChartBar,
+  FaCommentAlt,
+  FaMoneyBillWave,
+  FaUserCog,
+} from "react-icons/fa";
 import { BiImageAdd } from "react-icons/bi";
 
-const menu = [
+const menuItems = [
   {
     title: "Dashboard",
     icon: <FaTh />,
@@ -11,6 +17,11 @@ const menu = [
     title: "Add Product",
     icon: <BiImageAdd />,
     path: "/add-product",
+  },
+  {
+    title: "Transactions",
+    icon: <FaMoneyBillWave />,
+    path: "/transactions",
   },
   {
     title: "Account",
@@ -27,10 +38,21 @@ const menu = [
     ],
   },
   {
+    title: "Admin",
+    icon: <FaUserCog />,
+    childrens: [
+      {
+        title: "User Management",
+        path: "/admin/users",
+      },
+    ],
+    adminOnly: true,
+  },
+  {
     title: "Report Bug",
     icon: <FaCommentAlt />,
     path: "/contact-us",
   },
 ];
 
-export default menu;
+export default menuItems;

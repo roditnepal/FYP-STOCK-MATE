@@ -1,52 +1,256 @@
 .add-product {
-  margin-bottom: 5rem;
-  font-family: Arial, sans-serif; // Consistent clean font
+  width: 100%;
+  max-width: 1400px;
+  margin: 2rem auto 5rem;
+  padding: 0 2rem;
 
-  .card {
-    width: 100%;
-    max-width: 500px;
-    padding: 1.5rem;
-    border: 2px solid #3ABB94; // Teal border for a sleek look
-    border-radius: 8px;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+  .form-title {
+    color: var(--color-primary);
+    font-size: 2.4rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    svg {
+      color: var(--color-primary);
     }
   }
 
   form {
-    label {
-      display: block;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #1d3557; // Deep blue for contrast
-      margin-bottom: 0.5rem;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 2.5rem;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(30, 39, 73, 0.04),
+      0 1px 3px rgba(30, 39, 73, 0.08);
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
     }
 
-    input[type="text"],
-    input[type="number"],
-    input[type="file"],
-    input[type="email"],
-    input[type="password"],
-    select {
-      display: block;
-      font-size: 1rem;
-      font-weight: 400;
-      padding: 0.8rem;
-      margin: 0.5rem 0 1rem;
-      width: 100%;
-      border: 1px solid #3ABB94; // Teal border
-      border-radius: 5px;
-      outline: none;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    .form-left {
+      position: sticky;
+      top: 2rem;
+      height: fit-content;
 
-      &:focus {
-        border-color: #1d3557; // Dark blue on focus
-        box-shadow: 0 0 0 2px rgba(58, 187, 148, 0.2); // Soft teal glow
+      .image-upload {
+        background: rgba(250, 250, 255, 0.5);
+        border: 2px dashed rgba(30, 39, 73, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: var(--color-primary);
+          background: rgba(250, 250, 255, 0.8);
+        }
+
+        label {
+          color: var(--color-primary);
+          font-size: 1.6rem;
+          font-weight: 500;
+          margin-bottom: 1rem;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.8rem;
+        }
+
+        .formats {
+          color: var(--color-dark);
+          font-size: 1.2rem;
+          opacity: 0.7;
+          margin-bottom: 1.5rem;
+        }
+
+        input[type="file"] {
+          width: 100%;
+          padding: 1rem;
+          border: none;
+          background: none;
+          cursor: pointer;
+
+          &::-webkit-file-upload-button {
+            background: var(--color-primary);
+            color: var(--color-light);
+            padding: 0.8rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: var(--color-secondary);
+            }
+          }
+        }
+
+        .image-preview {
+          width: 100%;
+          height: 280px;
+          background: rgba(250, 250, 255, 0.8);
+          border-radius: 12px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 1.5rem;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+
+          p {
+            color: var(--color-dark);
+            opacity: 0.7;
+          }
+        }
+      }
+    }
+
+    .form-right {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      align-content: start;
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+
+        label {
+          color: var(--color-primary);
+          font-size: 1.5rem;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+
+          svg {
+            width: 18px;
+            height: 18px;
+            position: relative;
+            top: -1px;
+          }
+        }
+
+        input,
+        select {
+          width: 100%;
+          padding: 1.2rem 1.6rem;
+          border: 2px solid rgba(228, 217, 255, 0.4);
+          border-radius: 12px;
+          background: rgba(250, 250, 255, 0.8);
+          color: var(--color-dark);
+          font-size: 1.5rem;
+          transition: all 0.3s ease;
+
+          &::placeholder {
+            color: rgba(48, 52, 63, 0.5);
+          }
+
+          &:hover {
+            border-color: rgba(39, 52, 105, 0.3);
+            background: rgba(250, 250, 255, 0.95);
+          }
+
+          &:focus {
+            border-color: var(--color-secondary);
+            background: var(--color-light);
+            box-shadow: 0 0 0 4px rgba(39, 52, 105, 0.1);
+          }
+        }
+      }
+    }
+
+    .description-group {
+      grid-column: 2;
+      margin-top: 1rem;
+
+      @media (max-width: 1024px) {
+        grid-column: 1;
+      }
+
+      label {
+        color: var(--color-primary);
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+
+        svg {
+          width: 18px;
+          height: 18px;
+          position: relative;
+          top: -1px;
+        }
+      }
+
+      .quill {
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(250, 250, 255, 0.8);
+        border: 2px solid rgba(228, 217, 255, 0.4);
+
+        .ql-toolbar {
+          border: none;
+          border-bottom: 1px solid rgba(228, 217, 255, 0.4);
+          background: white;
+        }
+
+        .ql-container {
+          border: none;
+          background: white;
+          min-height: 200px;
+        }
+      }
+    }
+
+    .submit-btn {
+      grid-column: 2;
+      margin-top: 2rem;
+      display: flex;
+      justify-content: flex-end;
+
+      @media (max-width: 1024px) {
+        grid-column: 1;
+      }
+
+      button {
+        background: linear-gradient(
+          135deg,
+          var(--color-primary) 0%,
+          var(--color-secondary) 100%
+        );
+        color: var(--color-light);
+        border: none;
+        padding: 1.2rem 2.4rem;
+        border-radius: 12px;
+        font-size: 1.6rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(30, 39, 73, 0.1);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 8px rgba(30, 39, 73, 0.2);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
       }
     }
   }

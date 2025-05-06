@@ -35,7 +35,8 @@ export const loginUser = async (userData) => {
   try {
     const response = await axios.post(
       `${BACKEND_URL}/api/users/login`,
-      userData
+      userData,
+      { withCredentials: true }
     );
     if (response.statusText === "OK") {
       toast.success("Login Successful...");
@@ -47,13 +48,16 @@ export const loginUser = async (userData) => {
       error.message ||
       error.toString();
     toast.error(message);
+    throw new Error(message);
   }
 };
 
 // Logout User
 export const logoutUser = async () => {
   try {
-    await axios.get(`${BACKEND_URL}/api/users/logout`);
+    await axios.get(`${BACKEND_URL}/api/users/logout`, {
+      withCredentials: true,
+    });
   } catch (error) {
     const message =
       (error.response && error.response.data && error.response.data.message) ||
@@ -68,7 +72,8 @@ export const forgotPassword = async (userData) => {
   try {
     const response = await axios.post(
       `${BACKEND_URL}/api/users/forgotpassword`,
-      userData
+      userData,
+      { withCredentials: true }
     );
     toast.success(response.data.message);
   } catch (error) {
@@ -85,7 +90,8 @@ export const resetPassword = async (userData, resetToken) => {
   try {
     const response = await axios.put(
       `${BACKEND_URL}/api/users/resetpassword/${resetToken}`,
-      userData
+      userData,
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
@@ -100,20 +106,26 @@ export const resetPassword = async (userData, resetToken) => {
 // Get Login Status
 export const getLoginStatus = async () => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/users/loggedin`);
+    const response = await axios.get(`${BACKEND_URL}/api/users/loggedin`, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error) {
     const message =
       (error.response && error.response.data && error.response.data.message) ||
       error.message ||
       error.toString();
-    toast.error(message);
+    // Don't show toast error for login status check
+    console.log(message);
+    return false;
   }
 };
 // Get User Profile
 export const getUser = async () => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/users/getuser`);
+    const response = await axios.get(`${BACKEND_URL}/api/users/getuser`, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error) {
     const message =
@@ -121,6 +133,7 @@ export const getUser = async () => {
       error.message ||
       error.toString();
     toast.error(message);
+    return null;
   }
 };
 // Update Profile
@@ -128,7 +141,8 @@ export const updateUser = async (formData) => {
   try {
     const response = await axios.patch(
       `${BACKEND_URL}/api/users/updateuser`,
-      formData
+      formData,
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
@@ -144,7 +158,8 @@ export const changePassword = async (formData) => {
   try {
     const response = await axios.patch(
       `${BACKEND_URL}/api/users/changepassword`,
-      formData
+      formData,
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {

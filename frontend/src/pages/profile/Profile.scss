@@ -1,54 +1,394 @@
 .profile {
-  .card {
-    max-width: 700px;
-    display: flex;
-    justify-content: flex-start;
-    padding: 1rem 0;
-    margin: auto;  // Center the card horizontally
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem;
 
-    span.profile-photo {
-      text-align: center;
-    }
+  .page-header {
+    margin-bottom: 3.5rem;
 
-    img {
-      width: 100%;
-      max-width: 350px;
-      padding-right: 1rem;
-      padding-left: 1rem;
-      border-radius: 5px;  // Added rounded corners for a smoother look
-    }
-
-    span.profile-data {
-      margin: 0 1rem;
+    h3 {
+      color: var(--color-primary);
+      font-size: 2.4rem;
       display: flex;
-      flex-direction: column;  // Aligns the data vertically for a better layout
+      align-items: center;
+      gap: 1rem;
+
+      svg {
+        font-size: 2rem;
+      }
+    }
+  }
+
+  .card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(30, 39, 73, 0.04),
+      0 1px 3px rgba(30, 39, 73, 0.08);
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 3rem;
+
+    @media screen and (max-width: 1024px) {
+      grid-template-columns: 1fr;
+      padding: 2rem;
     }
 
-    span.profile-data > * {
-      border-top: 1px solid #ccc;
-      padding: 5px 0;
-      font-size: 1.6rem;  // Added font size for better readability
+    .profile-photo {
+      aspect-ratio: 1;
+      background: rgba(250, 250, 255, 0.5);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid rgba(228, 217, 255, 0.4);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     }
 
-    span.profile-data > *:first-child {
-      border-top: none;  // Removes the top border from the first child for cleaner look
+    .profile-data {
+      flex: 1;
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .info-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+
+        label {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          font-weight: 500;
+          color: var(--color-primary);
+          font-size: 1.5rem;
+
+          svg {
+            color: var(--color-primary);
+            font-size: 1.2rem;
+            width: 18px;
+            height: 18px;
+            position: relative;
+            top: -1px;
+          }
+        }
+
+        p {
+          font-size: 1.5rem;
+          color: var(--color-dark);
+          line-height: 1.6;
+          padding: 0.5rem 0;
+        }
+
+        input,
+        textarea {
+          width: 100%;
+          padding: 1.2rem 1.6rem;
+          border: 2px solid rgba(228, 217, 255, 0.4);
+          border-radius: 12px;
+          background: rgba(250, 250, 255, 0.8);
+          color: var(--color-dark);
+          font-size: 1.5rem;
+          transition: all 0.3s ease;
+
+          &::placeholder {
+            color: rgba(48, 52, 63, 0.5);
+          }
+
+          &:hover {
+            border-color: rgba(39, 52, 105, 0.3);
+            background: rgba(250, 250, 255, 0.95);
+          }
+
+          &:focus {
+            border-color: var(--color-secondary);
+            background: var(--color-light);
+            box-shadow: 0 0 0 4px rgba(39, 52, 105, 0.1);
+          }
+
+          &:disabled {
+            background: var(--light-blue);
+            cursor: not-allowed;
+          }
+        }
+
+        small {
+          color: var(--color-grey);
+          font-size: 1.1rem;
+          margin-top: 0.2rem;
+        }
+
+        input[type="file"] {
+          border: none;
+          padding: 1rem;
+          background: none;
+
+          &::-webkit-file-upload-button {
+            background: var(--color-primary);
+            color: var(--color-light);
+            padding: 0.8rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 1.1rem;
+            margin-right: 1rem;
+
+            &:hover {
+              background: var(--color-secondary);
+            }
+          }
+        }
+      }
+
+      .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+
+        button,
+        a {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          padding: 1.2rem 2rem;
+          font-weight: 500;
+          font-size: 1.5rem;
+          background: linear-gradient(
+            135deg,
+            var(--color-primary) 0%,
+            var(--color-secondary) 100%
+          );
+          color: var(--color-light);
+          border: none;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 6px rgba(30, 39, 73, 0.1);
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(30, 39, 73, 0.2);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+
+          svg {
+            font-size: 1.6rem;
+          }
+        }
+      }
+    }
+  }
+
+  // Change Password Section
+  .change-password {
+    margin-top: 3rem;
+
+    .card {
+      display: block;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2.5rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px rgba(30, 39, 73, 0.04),
+        0 1px 3px rgba(30, 39, 73, 0.08);
+
+      @media screen and (max-width: 1024px) {
+        padding: 2rem;
+      }
+
+      .section-header {
+        margin-bottom: 2.5rem;
+        h3 {
+          color: var(--color-primary);
+          font-size: 2rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+
+          svg {
+            font-size: 1.8rem;
+          }
+        }
+
+        p {
+          margin-top: 0.8rem;
+          color: var(--color-grey);
+          font-size: 1.3rem;
+          line-height: 1.6;
+          max-width: 600px;
+        }
+      }
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      max-width: 600px;
+
+      .info-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+
+        label {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          font-weight: 500;
+          color: var(--color-primary);
+          font-size: 1.5rem;
+
+          svg {
+            color: var(--color-primary);
+            font-size: 1.2rem;
+            width: 18px;
+            height: 18px;
+            position: relative;
+            top: -1px;
+          }
+        }
+
+        input {
+          width: 100%;
+          padding: 1.2rem 1.6rem;
+          border: 2px solid rgba(228, 217, 255, 0.4);
+          border-radius: 12px;
+          background: rgba(250, 250, 255, 0.8);
+          color: var(--color-dark);
+          font-size: 1.5rem;
+          transition: all 0.3s ease;
+
+          &::placeholder {
+            color: rgba(48, 52, 63, 0.5);
+          }
+
+          &:hover {
+            border-color: rgba(39, 52, 105, 0.3);
+            background: rgba(250, 250, 255, 0.95);
+          }
+
+          &:focus {
+            border-color: var(--color-secondary);
+            background: var(--color-light);
+            box-shadow: 0 0 0 4px rgba(39, 52, 105, 0.1);
+          }
+        }
+
+        small {
+          color: var(--color-grey);
+          font-size: 1.1rem;
+          margin-top: 0.2rem;
+          line-height: 1.4;
+        }
+      }
+
+      .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+
+        button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.8rem;
+          padding: 1.2rem 2rem;
+          font-weight: 500;
+          font-size: 1.5rem;
+          background: linear-gradient(
+            135deg,
+            var(--color-primary) 0%,
+            var(--color-secondary) 100%
+          );
+          color: var(--color-light);
+          border: none;
+          border-radius: 12px;
+          width: 100%;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 6px rgba(30, 39, 73, 0.1);
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(30, 39, 73, 0.2);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+
+          svg {
+            font-size: 1.6rem;
+          }
+        }
+      }
     }
   }
 }
 
 @media screen and (max-width: 600px) {
-  .card {
-    flex-direction: column;  // Stacks profile image and data on small screens
-    align-items: center;  // Centers everything on smaller screens
-    text-align: center;  // Ensures text is centered when stacked
-  }
+  .profile {
+    padding: 2rem 1.5rem;
 
-  span.profile-photo {
-    margin: auto;
-    padding-bottom: 1rem;  // Adds some space below the profile image
-  }
+    .card,
+    .change-password .card {
+      padding: 1.5rem;
+      gap: 2rem;
+    }
 
-  span.profile-data {
-    margin: 1rem 0;  // Adds space around the profile data on smaller screens
+    .page-header h3 {
+      font-size: 2rem;
+    }
+
+    .profile-photo {
+      max-width: 250px;
+      margin: 0 auto;
+    }
+
+    .info-group {
+      text-align: left;
+
+      label {
+        font-size: 1.3rem !important;
+      }
+
+      input,
+      textarea {
+        font-size: 1.3rem !important;
+        padding: 1rem 1.4rem !important;
+      }
+    }
+
+    .action-buttons {
+      justify-content: center;
+      flex-direction: column;
+      width: 100%;
+
+      button {
+        width: 100%;
+        font-size: 1.3rem !important;
+      }
+    }
+
+    .section-header {
+      h3 {
+        font-size: 1.8rem !important;
+      }
+      p {
+        font-size: 1.1rem !important;
+      }
+    }
   }
 }

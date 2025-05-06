@@ -3,7 +3,7 @@ import "./ProductSummary.scss";
 import { AiFillDollarCircle } from "react-icons/ai";
 import { BsCart4, BsCartX } from "react-icons/bs";
 import { BiCategory } from "react-icons/bi";
-import InfoBox from "../../infoBox/InfoBox";
+import { FiBox } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CALC_CATEGORY,
@@ -13,12 +13,6 @@ import {
   selectOutOfStock,
   selectTotalStoreValue,
 } from "../../../redux/features/product/productSlice";
-
-// Icons
-const earningIcon = <AiFillDollarCircle size={40} color="#fff" />;
-const productIcon = <BsCart4 size={40} color="#fff" />;
-const categoryIcon = <BiCategory size={40} color="#fff" />;
-const outOfStockIcon = <BsCartX size={40} color="#fff" />;
 
 // Format Amount
 export const formatNumbers = (x) => {
@@ -39,32 +33,52 @@ const ProductSummary = ({ products }) => {
 
   return (
     <div className="product-summary">
-      <h3 className="--mt">Inventory Stats</h3>
+      <div className="header">
+        <h3>
+          <FiBox size={24} />
+          Inventory Overview
+        </h3>
+      </div>
       <div className="info-summary">
-        <InfoBox
-          icon={productIcon}
-          title={"Total Products"}
-          count={products.length}
-          bgColor="card1"
-        />
-        <InfoBox
-          icon={earningIcon}
-          title={"Total Store Value"}
-          count={`$${formatNumbers(totalStoreValue.toFixed(2))}  `}
-          bgColor="card2"
-        />
-        <InfoBox
-          icon={outOfStockIcon}
-          title={"Out of Stock"}
-          count={outOfStock}
-          bgColor="card3"
-        />
-        <InfoBox
-          icon={categoryIcon}
-          title={"All Categories"}
-          count={category.length}
-          bgColor="card4"
-        />
+        <div className="info-box card1">
+          <div className="info-icon">
+            <BsCart4 size={32} />
+          </div>
+          <div className="info-text">
+            <h4>Total Products</h4>
+            <h3>{formatNumbers(products.length)}</h3>
+          </div>
+        </div>
+
+        <div className="info-box card2">
+          <div className="info-icon">
+            <AiFillDollarCircle size={32} />
+          </div>
+          <div className="info-text">
+            <h4>Total Store Value</h4>
+            <h3>Rs. {formatNumbers(totalStoreValue.toFixed(2))}</h3>
+          </div>
+        </div>
+
+        <div className="info-box card3">
+          <div className="info-icon">
+            <BsCartX size={32} />
+          </div>
+          <div className="info-text">
+            <h4>Out of Stock</h4>
+            <h3>{formatNumbers(outOfStock)}</h3>
+          </div>
+        </div>
+
+        <div className="info-box card4">
+          <div className="info-icon">
+            <BiCategory size={32} />
+          </div>
+          <div className="info-text">
+            <h4>All Categories</h4>
+            <h3>{formatNumbers(category.length)}</h3>
+          </div>
+        </div>
       </div>
     </div>
   );

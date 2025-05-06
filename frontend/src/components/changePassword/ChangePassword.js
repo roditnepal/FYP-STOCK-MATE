@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import "./ChangePassword.scss";
 import { toast } from "react-toastify";
 import { changePassword } from "../../services/authService";
 import Card from "../card/Card";
-import { useNavigate } from "react-router-dom";
+import Loader from "../loader/Loader";
+import { FiLock, FiKey, FiSave, FiShield } from "react-icons/fi";
 
 const initialState = {
   oldPassword: "",
@@ -12,13 +12,14 @@ const initialState = {
 };
 
 const ChangePassword = () => {
-  const navigate = useNavigate();
-  const [formData, setformData] = useState(initialState);
+  const [formData, setFormData] = useState(initialState);
+  const [isLoading, setIsLoading] = useState(false);
+
   const { oldPassword, password, password2 } = formData;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setformData({ ...formData, [name]: value });
+    setFormData({ ...formData, [name]: value });
   };
 
   const changePass = async (e) => {
@@ -28,48 +29,87 @@ const ChangePassword = () => {
       return toast.error("New passwords do not match");
     }
 
-    const formData = {
-      oldPassword,
-      password,
-    };
+    setIsLoading(true);
 
-    const data = await changePassword(formData);
-    toast.success(data);
-    navigate("/profile");
+    try {
+      const data = await changePassword({ oldPassword, password });
+      setIsLoading(false);
+      toast.success(data);
+      setFormData({ ...initialState });
+    } catch (error) {
+      setIsLoading(false);
+      toast.error(error);
+    }
   };
 
   return (
     <div className="change-password">
-      <Card cardClass={"password-card"}>
-        <h3>Change Password</h3>
-        <form onSubmit={changePass} className="--form-control">
-          <input
-            type="password"
-            placeholder="Old Password"
-            required
-            name="oldPassword"
-            value={oldPassword}
-            onChange={handleInputChange}
-          />
-          <input
-            type="password"
-            placeholder="New Password"
-            required
-            name="password"
-            value={password}
-            onChange={handleInputChange}
-          />
-          <input
-            type="password"
-            placeholder="Confirm New Password"
-            required
-            name="password2"
-            value={password2}
-            onChange={handleInputChange}
-          />
-          <button type="submit" className="--btn --btn-primary">
-            Change Password
-          </button>
+      {isLoading && <Loader />}
+
+      <Card cardClass="card">
+        <div className="section-header">
+          <h3>
+            <FiShield /> Change Password
+          </h3>
+          <p>
+            Update your password to keep your account secure. We recommend using
+            a strong, unique password that you don't use elsewhere.
+          </p>
+        </div>
+
+        <form onSubmit={changePass}>
+          <div className="info-group">
+            <label>
+              <FiKey /> Current Password
+            </label>
+            <input
+              type="password"
+              placeholder="Enter current password"
+              required
+              name="oldPassword"
+              value={oldPassword}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="info-group">
+            <label>
+              <FiLock /> New Password
+            </label>
+            <input
+              type="password"
+              placeholder="Enter new password"
+              required
+              name="password"
+              value={password}
+              onChange={handleInputChange}
+            />
+            <small>
+              Password must be at least 8 characters long with a mix of letters,
+              numbers, and symbols.
+            </small>
+          </div>
+          <div className="info-group">
+            <label>
+              <FiLock /> Confirm New Password
+            </label>
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              required
+              name="password2"
+              value={password2}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="action-buttons">
+            <button
+              type="submit"
+              className="--btn --btn-primary"
+            >
+              <FiSave /> Update Password
+            </button>
+          </div>
         </form>
       </Card>
     </div>

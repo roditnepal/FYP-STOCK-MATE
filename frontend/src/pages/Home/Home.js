@@ -8,55 +8,66 @@ import { ShowOnLogin, ShowOnLogout } from "../../components/protect/HiddenLink";
 const Home = () => {
   return (
     <div className="home">
-      <nav className="container --flex-between ">
-        {/* <div className="logo">
-          <RiProductHuntLine size={35} />
-        </div> */}
+      <nav className="container --flex-between">
+        <div className="logo">
+          <RiProductHuntLine
+            size={40}
+            color="#fafaff"
+          />
+        </div>
 
         <ul className="home-links">
           <ShowOnLogout>
             <li>
-              <Link to="/register">Register</Link>
+              <Link to="/register">Create Account</Link>
             </li>
           </ShowOnLogout>
           <ShowOnLogout>
             <li>
-              <button className="--btn --btn-primary">
-                <Link to="/login">Login</Link>
+              <button className="--btn">
+                <Link to="/login">Sign In</Link>
               </button>
             </li>
           </ShowOnLogout>
           <ShowOnLogin>
             <li>
-              <button className="--btn --btn-primary">
+              <button className="--btn">
                 <Link to="/dashboard">Dashboard</Link>
               </button>
             </li>
           </ShowOnLogin>
         </ul>
       </nav>
-      {/* HERO SECTION */}
+
       <section className="container hero">
         <div className="hero-text">
-          <h2>Inventory {"&"} Stock Management Solution</h2>
+          <h2>Smart Inventory Management Solution</h2>
           <p>
-            Inventory system to control and manage proucts in the warehouse in
-            real timeand integrated to make it easier to develop your business.
+            Take control of your inventory with our powerful management system.
+            Track, manage, and optimize your stock in real-time with advanced
+            analytics and intuitive tools designed for modern businesses.
           </p>
-          {/* <div className="hero-buttons">
-            <button className="--btn --btn-secondary">
-              <Link to="/dashboard">Free Trial 1 Month</Link>
-            </button>
-          </div> */}
           <div className="--flex-start">
-            <NumberText num="14K" text="Brand Owners" />
-            <NumberText num="23K" text="Active Users" />
-            <NumberText num="500+" text="Partners" />
+            <NumberText
+              num="14K+"
+              text="Active Users"
+            />
+            <NumberText
+              num="23K+"
+              text="Products Tracked"
+            />
+            <NumberText
+              num="500+"
+              text="Business Partners"
+            />
           </div>
         </div>
 
         <div className="hero-image">
-          <img src={heroImg} alt="Inventory" />
+          <img
+            src={heroImg}
+            alt="Inventory Management"
+          />
         </div>
       </section>
     </div>
@@ -66,8 +77,8 @@ const Home = () => {
 const NumberText = ({ num, text }) => {
   return (
     <div className="--mr">
-      <h3 className="--color-white">{num}</h3>
-      <p className="--color-white">{text}</p>
+      <h3>{num}</h3>
+      <p>{text}</p>
     </div>
   );
 };

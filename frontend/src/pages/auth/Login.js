@@ -6,7 +6,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { loginUser, validateEmail } from "../../services/authService";
-import { SET_LOGIN, SET_NAME } from "../../redux/features/auth/authSlice";
+import {
+  SET_LOGIN,
+  SET_NAME,
+  SET_USER,
+} from "../../redux/features/auth/authSlice";
 import Loader from "../../components/loader/Loader";
 
 const initialState = {
@@ -44,10 +48,12 @@ const Login = () => {
     setIsLoading(true);
     try {
       const data = await loginUser(userData);
-      console.log(data);
-      await dispatch(SET_LOGIN(true));
-      await dispatch(SET_NAME(data.name));
-      navigate("/dashboard");
+      if (data) {
+        dispatch(SET_LOGIN(true));
+        dispatch(SET_NAME(data.name));
+        dispatch(SET_USER(data));
+        navigate("/dashboard");
+      }
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
@@ -55,43 +61,56 @@ const Login = () => {
   };
 
   return (
-    <div className={`container ${styles.auth}`}>
+    <div className={` ${styles.auth}`}>
       {isLoading && <Loader />}
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
-            <BiLogIn size={35} color="#999" />
+            <BiLogIn
+              size={40}
+              color="#1e2749"
+            />
           </div>
-          <h2>Login</h2>
+          <h2>Welcome Back</h2>
 
           <form onSubmit={login}>
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              name="email"
-              value={email}
-              onChange={handleInputChange}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              name="password"
-              value={password}
-              onChange={handleInputChange}
-            />
-            <button type="submit" className="--btn --btn-primary --btn-block">
-              Login
+            <div className="--form-control">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                required
+                name="email"
+                value={email}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="--form-control">
+              <input
+                type="password"
+                placeholder="Enter your password"
+                required
+                name="password"
+                value={password}
+                onChange={handleInputChange}
+              />
+            </div>
+            <button
+              type="submit"
+              className="--btn --btn-primary --btn-block"
+            >
+              Sign In
             </button>
           </form>
-          <Link to="/forgot">Forgot Password</Link>
 
-          <span className={styles.register}>
-            <Link to="/">Home</Link>
-            <p> &nbsp; Don't have an account? &nbsp;</p>
-            <Link to="/register">Register</Link>
-          </span>
+          <div className="--flex-center">
+            <Link to="/forgot">Forgot Password?</Link>
+          </div>
+
+          <div className={styles.register}>
+            <Link to="/">Back to Home</Link>
+            <p>&nbsp;•&nbsp;</p>
+            <Link to="/register">Create Account</Link>
+          </div>
         </div>
       </Card>
     </div>

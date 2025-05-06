@@ -29,8 +29,14 @@ const SidebarItem = ({ item, isOpen }) => {
         <div className="sidebar-content">
           {item.childrens.map((child, index) => {
             return (
-              <div key={index} className="s-child">
-                <NavLink to={child.path} className={activeSublink}>
+              <div
+                key={index}
+                className="s-child"
+              >
+                <NavLink
+                  to={child.path}
+                  className={activeSublink}
+                >
                   <div className="sidebar-item">
                     <div className="sidebar-title">
                       <span>
@@ -48,7 +54,10 @@ const SidebarItem = ({ item, isOpen }) => {
     );
   } else {
     return (
-      <NavLink to={item.path} className={activeLink}>
+      <NavLink
+        to={item.path}
+        className={activeLink}
+      >
         <div className="sidebar-item s-parent">
           <div className="sidebar-title">
             <span>

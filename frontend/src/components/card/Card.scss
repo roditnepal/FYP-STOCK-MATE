@@ -1,0 +1,27 @@
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 1rem 0;
+
+  &.--flex-dir-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .card-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+
+    h3 {
+      font-size: 2rem;
+      color: var(--color-dark);
+    }
+  }
+
+  .card-body {
+    font-size: 1.6rem;
+  }
+}

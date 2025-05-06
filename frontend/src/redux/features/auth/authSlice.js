@@ -6,7 +6,7 @@ try {
   name = storedName ? JSON.parse(storedName) : "";
 } catch (error) {
   console.error("Error parsing name from localStorage:", error);
-  localStorage.removeItem("name"); // Remove corrupted data
+  localStorage.removeItem("name");
 }
 
 const initialState = {
@@ -18,6 +18,8 @@ const initialState = {
     phone: "",
     bio: "",
     photo: "",
+    role: "",
+    categories: [],
   },
 };
 
@@ -34,15 +36,29 @@ const authSlice = createSlice({
     },
     SET_USER(state, action) {
       const profile = action.payload;
-      state.user = { ...profile };
+      state.user = profile;
     },
   },
 });
 
-export const { SET_LOGIN, SET_NAME, SET_USER } = authSlice.actions;
-
+// Selectors
 export const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
 export const selectName = (state) => state.auth.name;
 export const selectUser = (state) => state.auth.user;
+export const selectRole = (state) => {
+  if (!state.auth.user) return "";
+  return state.auth.user.role || "";
+};
+export const selectCategories = (state) => {
+  if (!state.auth.user) return [];
+  return state.auth.user.categories || [];
+};
+export const selectIsAdmin = (state) => {
+  if (!state.auth.user) return false;
+  return state.auth.user.role === "admin";
+};
+
+// Action creators
+export const { SET_LOGIN, SET_NAME, SET_USER } = authSlice.actions;
 
 export default authSlice.reducer;

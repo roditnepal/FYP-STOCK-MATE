@@ -8,6 +8,14 @@ import "./Profile.scss";
 import { toast } from "react-toastify";
 import { updateUser } from "../../services/authService";
 import ChangePassword from "../../components/changePassword/ChangePassword";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiInfo,
+  FiImage,
+  FiSave,
+} from "react-icons/fi";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -22,14 +30,15 @@ const EditProfile = () => {
   }, [email, navigate]);
 
   const initialState = {
-    name: user?.name,
-    email: user?.email,
-    phone: user?.phone,
-    bio: user?.bio,
-    photo: user?.photo,
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    bio: user?.bio || "",
+    photo: user?.photo || "https://i.ibb.co/4pDNDk1/avatar.png",
   };
   const [profile, setProfile] = useState(initialState);
-  const [profileImage, setProfileImage] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(user?.photo || null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -37,110 +46,140 @@ const EditProfile = () => {
   };
 
   const handleImageChange = (e) => {
-    setProfileImage(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      const allowedFormats = ["image/png", "image/jpg", "image/jpeg"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (!allowedFormats.includes(file.type)) {
+        toast.error("Unsupported file format. Please use JPG, JPEG, or PNG.");
+        e.target.value = null;
+        return;
+      }
+      if (file.size > maxSize) {
+        toast.error("File size exceeds 5MB limit.");
+        e.target.value = null;
+        return;
+      }
+      setProfileImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const saveProfile = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      // Handle Image upload
-      let imageURL;
-      if (
-        profileImage &&
-        (profileImage.type === "image/jpeg" ||
-          profileImage.type === "image/jpg" ||
-          profileImage.type === "image/png")
-      ) {
-        const image = new FormData();
-        image.append("file", profileImage);
-        image.append("cloud_name", "zinotrust");
-        image.append("upload_preset", "wk66xdkq");
-
-        // First save image to cloudinary
-        const response = await fetch(
-          "https://api.cloudinary.com/v1_1/zinotrust/image/upload",
-          { method: "post", body: image }
-        );
-        const imgData = await response.json();
-        imageURL = imgData.url.toString();
-
-        // Save Profile
-        const formData = {
-          name: profile.name,
-          phone: profile.phone,
-          bio: profile.bio,
-          photo: profileImage ? imageURL : profile.photo,
-        };
-
-        const data = await updateUser(formData);
-        console.log(data);
-        toast.success("User updated");
-        navigate("/profile");
-        setIsLoading(false);
+      const formData = new FormData();
+      formData.append("name", profile.name);
+      formData.append("phone", profile.phone);
+      formData.append("bio", profile.bio);
+      if (profileImage) {
+        formData.append("photo", profileImage);
       }
+
+      // Log FormData for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+
+      const data = await updateUser(formData);
+      toast.success("Profile updated successfully");
+      navigate("/profile");
     } catch (error) {
-      console.log(error);
+      toast.error(error.message || "Failed to update profile");
+    } finally {
       setIsLoading(false);
-      toast.error(error.message);
     }
   };
 
   return (
-    <div className="profile --my2">
+    <div className="profile">
+      <div className="page-header">
+        <h3>
+          <FiUser /> Edit Profile
+        </h3>
+      </div>
+
       {isLoading && <Loader />}
 
-      <Card cardClass={"card --flex-dir-column"}>
-        <span className="profile-photo">
-          <img src={user?.photo} alt="profilepic" />
-        </span>
-        <form className="--form-control --m" onSubmit={saveProfile}>
-          <span className="profile-data">
-            <p>
-              <label>Name:</label>
+      <Card cardClass="card">
+        <div className="profile-photo">
+          <img
+            src={imagePreview || profile.photo}
+            alt="profile"
+          />
+        </div>
+        <div className="profile-data">
+          <form onSubmit={saveProfile}>
+            <div className="info-group">
+              <label>
+                <FiUser /> Name
+              </label>
               <input
                 type="text"
                 name="name"
-                value={profile?.name}
+                value={profile.name}
                 onChange={handleInputChange}
               />
-            </p>
-            <p>
-              <label>Email:</label>
-              <input type="text" name="email" value={profile?.email} disabled />
-              <br />
-              <code>Email cannot be changed.</code>
-            </p>
-            <p>
-              <label>Phone:</label>
+            </div>
+            <div className="info-group">
+              <label>
+                <FiMail /> Email
+              </label>
+              <input
+                type="text"
+                name="email"
+                value={profile.email}
+                disabled
+              />
+              <small>Email cannot be changed.</small>
+            </div>
+            <div className="info-group">
+              <label>
+                <FiPhone /> Phone
+              </label>
               <input
                 type="text"
                 name="phone"
-                value={profile?.phone}
+                value={profile.phone}
                 onChange={handleInputChange}
               />
-            </p>
-            <p>
-              <label>Bio:</label>
+            </div>
+            <div className="info-group">
+              <label>
+                <FiInfo /> Bio
+              </label>
               <textarea
                 name="bio"
-                value={profile?.bio}
+                value={profile.bio}
                 onChange={handleInputChange}
-                cols="30"
-                rows="10"
+                rows="4"
               ></textarea>
-            </p>
-            <p>
-              <label>Photo:</label>
-              <input type="file" name="image" onChange={handleImageChange} />
-            </p>
-            <div>
-              <button className="--btn --btn-primary">Edit Profile</button>
             </div>
-          </span>
-        </form>
+            <div className="info-group">
+              <label>
+                <FiImage /> Profile Photo
+              </label>
+              <input
+                type="file"
+                name="photo"
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={handleImageChange}
+              />
+            </div>
+            <div className="action-buttons">
+              <button
+                type="submit"
+                className="--btn --btn-primary"
+              >
+                <FiSave /> Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
       </Card>
-      <br />
+
       <ChangePassword />
     </div>
   );

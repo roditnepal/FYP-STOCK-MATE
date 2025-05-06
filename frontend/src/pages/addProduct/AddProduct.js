@@ -7,25 +7,28 @@ import {
   createProduct,
   selectIsLoading,
 } from "../../redux/features/product/productSlice";
+import { toast } from "react-toastify";
 
 const initialState = {
   name: "",
   category: "",
   quantity: "",
   price: "",
+  expiryDate: "",
 };
 
 const AddProduct = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [product, setProduct] = useState(initialState);
-  const [productImage, setProductImage] = useState("");
+  const [productImage, setProductImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const isLoading = useSelector(selectIsLoading);
+  const reduxIsLoading = useSelector(selectIsLoading);
 
-  const { name, category, price, quantity } = product;
+  const { name, category, price, quantity, expiryDate } = product;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,39 +36,68 @@ const AddProduct = () => {
   };
 
   const handleImageChange = (e) => {
-    setProductImage(e.target.files[0]);
-    setImagePreview(URL.createObjectURL(e.target.files[0]));
+    const file = e.target.files[0];
+    if (file) {
+      const allowedFormats = ["image/png", "image/jpg", "image/jpeg"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (!allowedFormats.includes(file.type)) {
+        toast.error("Unsupported file format. Please use JPG, JPEG, or PNG.");
+        e.target.value = null;
+        return;
+      }
+      if (file.size > maxSize) {
+        toast.error("File size exceeds 5MB limit.");
+        e.target.value = null;
+        return;
+      }
+      setProductImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
-  const generateKSKU = (category) => {
-    const letter = category.slice(0, 3).toUpperCase();
-    const number = Date.now();
-    const sku = letter + "-" + number;
-    return sku;
+  const validateForm = () => {
+    if (!name) return "Product name is required.";
+    if (!category) return "Category is required.";
+    if (!price || price <= 0) return "Price must be a positive number.";
+    if (!quantity || quantity < 0) return "Quantity cannot be negative.";
+    if (!expiryDate) return "Expiry date is required.";
+    return null;
   };
 
   const saveProduct = async (e) => {
     e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("name", name);
-    formData.append("sku", generateKSKU(category));
     formData.append("category", category);
     formData.append("quantity", Number(quantity));
     formData.append("price", price);
     formData.append("description", description);
-    formData.append("image", productImage);
+    formData.append("expiryDate", expiryDate);
+    if (productImage) {
+      formData.append("image", productImage);
+    }
 
-    console.log(...formData);
-
-    await dispatch(createProduct(formData));
-
-    navigate("/dashboard");
+    try {
+      const result = await dispatch(createProduct(formData)).unwrap();
+      toast.success("Product added successfully");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(error.message || "Failed to add product");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div>
-      {isLoading && <Loader />}
-      <h3 className="--mt">Add New Product</h3>
+      {(isLoading || reduxIsLoading) && <Loader />}
       <ProductForm
         product={product}
         productImage={productImage}
@@ -75,6 +107,7 @@ const AddProduct = () => {
         handleInputChange={handleInputChange}
         handleImageChange={handleImageChange}
         saveProduct={saveProduct}
+        isEdit={false}
       />
     </div>
   );
