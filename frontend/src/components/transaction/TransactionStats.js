@@ -6,8 +6,20 @@ import "./Transaction.scss";
 import { FaMoneyBillWave, FaShoppingCart, FaChartBar } from "react-icons/fa";
 import moment from "moment";
 
-// Import Chart.js directly without react-chartjs-2
-import Chart from "chart.js/auto";
+// Import Recharts components
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 const TransactionStats = () => {
   const dispatch = useDispatch();
@@ -19,132 +31,10 @@ const TransactionStats = () => {
     endDate: moment().toDate(),
   });
 
-  // References for chart canvases
-  const barChartRef = React.useRef(null);
-  const pieChartRef = React.useRef(null);
-
-  // References for chart instances
-  const barChartInstance = React.useRef(null);
-  const pieChartInstance = React.useRef(null);
-
   // Load stats on component mount and when date range changes
   useEffect(() => {
     dispatch(getTransactionStats(dateRange));
   }, [dispatch, dateRange]);
-
-  // Create/update charts when stats change
-  useEffect(() => {
-    if (
-      stats &&
-      stats.topProducts &&
-      stats.topProducts.length > 0 &&
-      barChartRef.current
-    ) {
-      // Destroy previous chart if it exists
-      if (barChartInstance.current) {
-        barChartInstance.current.destroy();
-      }
-
-      const ctx = barChartRef.current.getContext("2d");
-
-      // Prepare data for top products chart
-      const labels = stats.topProducts.map((item) => item.name);
-      const data = stats.topProducts.map((item) => item.totalRevenue);
-
-      // Create new chart
-      barChartInstance.current = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Revenue by Product",
-              data,
-              backgroundColor: "rgba(54, 162, 235, 0.6)",
-              borderColor: "rgba(54, 162, 235, 1)",
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-            title: {
-              display: true,
-              text: "Revenue by Product",
-            },
-          },
-        },
-      });
-    }
-
-    if (
-      stats &&
-      stats.salesByPaymentMethod &&
-      stats.salesByPaymentMethod.length > 0 &&
-      pieChartRef.current
-    ) {
-      // Destroy previous chart if it exists
-      if (pieChartInstance.current) {
-        pieChartInstance.current.destroy();
-      }
-
-      const ctx = pieChartRef.current.getContext("2d");
-
-      // Prepare data for payment method chart
-      const labels = stats.salesByPaymentMethod.map((item) => item._id);
-      const data = stats.salesByPaymentMethod.map((item) => item.total);
-      const backgroundColor = [
-        "#4CAF50", // Green
-        "#2196F3", // Blue
-        "#FFC107", // Yellow
-        "#9C27B0", // Purple
-        "#FF5722", // Orange
-      ];
-
-      // Create new chart
-      pieChartInstance.current = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Sales by Payment Method",
-              data,
-              backgroundColor,
-              borderColor: backgroundColor,
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-            title: {
-              display: true,
-              text: "Sales by Payment Method",
-            },
-          },
-        },
-      });
-    }
-
-    // Cleanup function to destroy charts when component unmounts
-    return () => {
-      if (barChartInstance.current) {
-        barChartInstance.current.destroy();
-      }
-      if (pieChartInstance.current) {
-        pieChartInstance.current.destroy();
-      }
-    };
-  }, [stats]);
 
   // Handle date change
   const handleDateChange = (e) => {
@@ -164,6 +54,21 @@ const TransactionStats = () => {
   const formatDateForInput = (date) => {
     return moment(date).format("YYYY-MM-DD");
   };
+
+  // Prepare data for Recharts (if stats are available)
+  const topProductsData =
+    stats?.topProducts?.map((item) => ({
+      name: item.name,
+      Revenue: parseFloat(item.totalRevenue),
+    })) || [];
+  const salesByPaymentMethodData =
+    stats?.salesByPaymentMethod?.map((item) => ({
+      name: item._id,
+      value: parseFloat(item.total),
+    })) || [];
+
+  // Define colors for Pie Chart
+  const COLORS = ["#4CAF50", "#2196F3", "#FFC107", "#9C27B0", "#FF5722"];
 
   return (
     <div className="transaction-stats">
@@ -246,25 +151,70 @@ const TransactionStats = () => {
             </div>
           </div>
 
-          <div className="stats-charts">
-            <div className="chart-container">
-              <h4>Top Selling Products</h4>
-              {stats.topProducts && stats.topProducts.length > 0 ? (
-                <canvas ref={barChartRef} />
-              ) : (
-                <p>No product data available.</p>
-              )}
-            </div>
-
-            <div className="chart-container">
-              <h4>Sales by Payment Method</h4>
-              {stats.salesByPaymentMethod &&
-              stats.salesByPaymentMethod.length > 0 ? (
-                <canvas ref={pieChartRef} />
-              ) : (
-                <p>No payment method data available.</p>
-              )}
-            </div>
+          <div className="charts">
+            {" "}
+            {/* This container still uses the CSS layout */}
+            {/* Bar Chart for Revenue by Product */}
+            {topProductsData.length > 0 && (
+              <div className="chart-container">
+                {" "}
+                {/* Keep this container for styling */}
+                <h3>
+                  <FaChartBar /> Revenue by Product
+                </h3>
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <BarChart data={topProductsData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Legend />
+                    <Bar
+                      dataKey="Revenue"
+                      fill="#8884d8"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {/* Pie Chart for Sales by Payment Method */}
+            {salesByPaymentMethodData.length > 0 && (
+              <div className="chart-container">
+                {" "}
+                {/* Keep this container for styling */}
+                <h3>
+                  <FaChartBar /> Sales by Payment Method
+                </h3>
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <PieChart>
+                    <Pie
+                      data={salesByPaymentMethodData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label
+                    >
+                      {salesByPaymentMethodData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
         </div>
       )}

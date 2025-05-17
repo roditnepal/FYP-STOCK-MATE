@@ -33,7 +33,6 @@ export const getProduct = async (id) => {
       error.message ||
       error.toString();
     toast.error(message);
-    return null;
   }
 };
 
@@ -43,7 +42,6 @@ export const deleteProduct = async (id) => {
     const response = await axios.delete(`${BACKEND_URL}/api/products/${id}`, {
       withCredentials: true,
     });
-    toast.success("Product deleted successfully");
     return response.data;
   } catch (error) {
     const message =
@@ -51,7 +49,6 @@ export const deleteProduct = async (id) => {
       error.message ||
       error.toString();
     toast.error(message);
-    return null;
   }
 };
 
@@ -61,10 +58,7 @@ export const updateProduct = async (id, formData) => {
     const response = await axios.patch(
       `${BACKEND_URL}/api/products/${id}`,
       formData,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      }
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
@@ -73,7 +67,6 @@ export const updateProduct = async (id, formData) => {
       error.message ||
       error.toString();
     toast.error(message);
-    return null;
   }
 };
 
@@ -82,7 +75,6 @@ export const createProduct = async (formData) => {
   try {
     const response = await axios.post(`${BACKEND_URL}/api/products`, formData, {
       withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   } catch (error) {
@@ -91,6 +83,5 @@ export const createProduct = async (formData) => {
       error.message ||
       error.toString();
     toast.error(message);
-    return null;
   }
 };

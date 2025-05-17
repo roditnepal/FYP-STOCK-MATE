@@ -107,9 +107,9 @@ const getTransactions = asyncHandler(async (req, res) => {
 
 // Get Single Transaction
 const getTransaction = asyncHandler(async (req, res) => {
-  const transaction = await Transaction.findById(req.params.id).populate(
-    "products.product"
-  );
+  const transaction = await Transaction.findById(req.params.id)
+    .populate("products.product")
+    .populate("performedBy.user", "name role");
 
   // If transaction doesn't exist
   if (!transaction) {

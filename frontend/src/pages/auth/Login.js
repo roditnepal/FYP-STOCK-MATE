@@ -41,21 +41,32 @@ const Login = () => {
       return toast.error("Please enter a valid email");
     }
 
+    // Check if backend URL is configured
+    if (!process.env.REACT_APP_BACKEND_URL) {
+      console.error("Backend URL not configured");
+      return toast.error("Server configuration error. Please contact support.");
+    }
+
     const userData = {
       email,
       password,
     };
     setIsLoading(true);
     try {
+      console.log("Starting login process...");
       const data = await loginUser(userData);
+      console.log("Login response received:", data);
+
       if (data) {
         dispatch(SET_LOGIN(true));
         dispatch(SET_NAME(data.name));
         dispatch(SET_USER(data));
         navigate("/dashboard");
       }
-      setIsLoading(false);
     } catch (error) {
+      console.error("Login error:", error);
+      // Don't show the error message here as it's already shown in the service
+    } finally {
       setIsLoading(false);
     }
   };

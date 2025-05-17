@@ -11,7 +11,6 @@
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(30, 39, 73, 0.04),
       0 1px 3px rgba(30, 39, 73, 0.08);
-    margin-bottom: 2rem;
 
     .--flex-between {
       margin-bottom: 2rem;
@@ -129,13 +128,12 @@
                 background-color: #2a9d8f;
                 color: white;
               }
+            }
 
-              &.category {
-                background-color: #457b9d;
-                color: white;
-                margin-right: 0.5rem;
-                margin-bottom: 0.5rem;
-              }
+            .categories {
+              max-width: 200px;
+              white-space: normal;
+              line-height: 1.4;
             }
 
             .actions {

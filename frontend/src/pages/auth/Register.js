@@ -68,7 +68,10 @@ const Register = () => {
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
-            <TiUserAddOutline size={35} color="#999" />
+            <TiUserAddOutline
+              size={35}
+              color="#999"
+            />
           </div>
           <h2>Register</h2>
 
@@ -105,7 +108,10 @@ const Register = () => {
               value={password2}
               onChange={handleInputChange}
             />
-            <button type="submit" className="--btn --btn-primary --btn-block">
+            <button
+              type="submit"
+              className="--btn --btn-primary --btn-block"
+            >
               Register
             </button>
           </form>

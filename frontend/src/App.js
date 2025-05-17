@@ -25,6 +25,8 @@ import AddTransactionPage from "./pages/transaction/AddTransactionPage";
 import TransactionDetailPage from "./pages/transaction/TransactionDetailPage";
 import UserList from "./pages/admin/UserList";
 import UserForm from "./pages/admin/UserForm";
+import CategoryList from "./pages/admin/CategoryList";
+import CategoryForm from "./pages/admin/CategoryForm";
 
 axios.defaults.withCredentials = true;
 
@@ -85,14 +87,27 @@ function App() {
         containerClassName="Toastify__toast-container"
       />
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot" element={<Forgot />} />
-        <Route path="/resetpassword/:resetToken" element={<Reset />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+        <Route
+          path="/forgot"
+          element={<Forgot />}
+        />
+        <Route
+          path="/resetpassword/:resetToken"
+          element={<Reset />}
+        />
 
-        {/* Dashboard and Admin Routes */}
         <Route
           path="/dashboard"
           element={
@@ -220,6 +235,37 @@ function App() {
             <Sidebar>
               <Layout>
                 <UserForm />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        {/* Category Routes */}
+        <Route
+          path="/admin/categories"
+          element={
+            <Sidebar>
+              <Layout>
+                <CategoryList />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        <Route
+          path="/admin/category/add"
+          element={
+            <Sidebar>
+              <Layout>
+                <CategoryForm />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        <Route
+          path="/admin/category/edit/:id"
+          element={
+            <Sidebar>
+              <Layout>
+                <CategoryForm />
               </Layout>
             </Sidebar>
           }

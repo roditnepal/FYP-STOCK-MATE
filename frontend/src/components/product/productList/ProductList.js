@@ -157,7 +157,7 @@ const ProductList = ({ products, isLoading, handleDelete }) => {
                     <tr key={_id}>
                       <td>{itemOffset + index + 1}</td>
                       <td>{shortenText(name, 16)}</td>
-                      <td>{category}</td>
+                      <td>{category?.name || "N/A"}</td>
                       <td>
                         {"Rs. "}
                         {price}

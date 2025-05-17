@@ -11,12 +11,15 @@ import { selectIsAdmin } from "../../redux/features/auth/authSlice";
 import ReactPaginate from "react-paginate";
 import Search from "../../components/search/Search";
 import "./UserList.scss";
+import { toast } from "react-hot-toast";
+import categoryService from "../../services/categoryService";
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
   const isAdmin = useSelector(selectIsAdmin);
 
@@ -45,8 +48,18 @@ const UserList = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await categoryService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchCategories();
   }, []);
 
   // Handle pagination
@@ -92,9 +105,16 @@ const UserList = () => {
   const deleteUserHandler = async (id) => {
     try {
       await deleteUser(id);
+      toast.success("User deleted successfully");
       fetchUsers();
     } catch (error) {
-      console.log(error);
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      toast.error(message);
     }
   };
 
@@ -109,6 +129,17 @@ const UserList = () => {
       return shortenedText;
     }
     return text;
+  };
+
+  // Get category names for a user
+  const getUserCategories = (userCategories) => {
+    if (!userCategories || userCategories.length === 0) return "None";
+    return userCategories
+      .map((catId) => {
+        const category = categories.find((c) => c._id === catId);
+        return category ? category.name : "Unknown";
+      })
+      .join(", ");
   };
 
   return (
@@ -190,27 +221,8 @@ const UserList = () => {
                         </span>
                       </td>
                       <td>
-                        <div
-                          style={{
-                            maxWidth: "200px",
-                            display: "flex",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {categories && categories.length > 0 ? (
-                            categories.map((category, idx) => (
-                              <span
-                                key={idx}
-                                className="badge category"
-                              >
-                                {shortenText(category, 10)}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="--text-sm --color-grey">
-                              No categories
-                            </span>
-                          )}
+                        <div className="categories">
+                          {getUserCategories(categories)}
                         </div>
                       </td>
                       <td>{new Date(createdAt).toLocaleDateString()}</td>
@@ -220,13 +232,13 @@ const UserList = () => {
                             className="edit"
                             onClick={() => navigate(`/admin/user/edit/${_id}`)}
                           >
-                            <FiEdit2 size={20} />
+                            <FiEdit2 />
                           </button>
                           <button
                             className="delete"
                             onClick={() => confirmDelete(_id)}
                           >
-                            <FiTrash2 size={20} />
+                            <FiTrash2 />
                           </button>
                         </div>
                       </td>

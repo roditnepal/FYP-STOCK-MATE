@@ -8,7 +8,6 @@ import { SET_NAME, SET_USER } from "../../redux/features/auth/authSlice";
 import { getUser } from "../../services/authService";
 import "./Profile.scss";
 import { FiUser, FiMail, FiPhone, FiInfo, FiEdit2 } from "react-icons/fi";
-import { toast } from "react-toastify";
 
 const Profile = () => {
   useRedirectLoggedOutUser("/login");
@@ -20,16 +19,11 @@ const Profile = () => {
   useEffect(() => {
     setIsLoading(true);
     async function getUserData() {
-      try {
-        const data = await getUser();
-        setProfile(data);
-        await dispatch(SET_USER(data));
-        await dispatch(SET_NAME(data.name));
-      } catch (error) {
-        toast.error(error.message || "Failed to load profile");
-      } finally {
-        setIsLoading(false);
-      }
+      const data = await getUser();
+      setProfile(data);
+      setIsLoading(false);
+      await dispatch(SET_USER(data));
+      await dispatch(SET_NAME(data.name));
     }
     getUserData();
   }, [dispatch]);
@@ -43,13 +37,13 @@ const Profile = () => {
       </div>
 
       {isLoading && <SpinnerImg />}
-      {!isLoading && !profile ? (
+      {!isLoading && profile === null ? (
         <p>Something went wrong, please reload the page...</p>
       ) : (
         <Card cardClass="card">
           <div className="profile-photo">
             <img
-              src={profile?.photo || "https://i.ibb.co/4pDNDk1/avatar.png"}
+              src={profile?.photo}
               alt="profile"
             />
           </div>
@@ -58,25 +52,25 @@ const Profile = () => {
               <label>
                 <FiUser /> Name
               </label>
-              <p>{profile?.name || "N/A"}</p>
+              <p>{profile?.name}</p>
             </div>
             <div className="info-group">
               <label>
                 <FiMail /> Email
               </label>
-              <p>{profile?.email || "N/A"}</p>
+              <p>{profile?.email}</p>
             </div>
             <div className="info-group">
               <label>
                 <FiPhone /> Phone
               </label>
-              <p>{profile?.phone || "N/A"}</p>
+              <p>{profile?.phone}</p>
             </div>
             <div className="info-group">
               <label>
                 <FiInfo /> Bio
               </label>
-              <p>{profile?.bio || "No bio available"}</p>
+              <p>{profile?.bio}</p>
             </div>
             <div className="action-buttons">
               <Link

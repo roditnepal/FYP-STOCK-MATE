@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { createUser, getUser, updateUser } from "../../services/adminService";
 import { useSelector } from "react-redux";
 import { selectIsAdmin } from "../../redux/features/auth/authSlice";
-import { getProducts } from "../../services/productService";
 import {
   FiUser,
   FiMail,
@@ -16,6 +15,8 @@ import {
   FiUpload,
 } from "react-icons/fi";
 import "./UserForm.scss";
+import Loader from "../../components/loader/Loader";
+import categoryService from "../../services/categoryService";
 
 const initialState = {
   name: "",
@@ -48,25 +49,18 @@ const UserForm = () => {
     }
   }, [isAdmin, navigate]);
 
-  // Fetch available categories from products
-  const fetchCategories = async () => {
+  // Get all categories
+  const getCategories = async () => {
     try {
-      const products = await getProducts();
-      const uniqueCategories = [
-        ...new Set(products.map((product) => product.category)),
-      ];
-      setCategories(uniqueCategories);
+      const data = await categoryService.getCategories();
+      setCategories(data);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching categories:", error);
     }
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  // If editing, fetch user data
-  useEffect(() => {
+    getCategories();
     if (id) {
       setIsEditing(true);
       setIsLoading(true);
@@ -175,23 +169,30 @@ const UserForm = () => {
         }
       }
 
-      // Success toast is already shown in the service, don't show it here
+      toast.success(
+        isEditing ? "User updated successfully" : "User created successfully"
+      );
       navigate("/admin/users");
     } catch (error) {
-      console.log(error);
-      // Error is already shown in the service, don't show it here
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      toast.error(message);
     }
   };
 
   return (
     <div className="add-user">
       <div className="form-title">
-        <FiUser size={28} />
-        <h2>{isEditing ? "Edit User" : "Add New User"}</h2>
+        <FiUserCheck size={28} />
+        <h2>{id ? "Edit User" : "Add New User"}</h2>
       </div>
 
       {isLoading ? (
-        <div className="loading">Loading...</div>
+        <Loader />
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="form-left">
@@ -298,32 +299,34 @@ const UserForm = () => {
               />
             </div>
 
-            <div className="categories-group">
-              <label>
-                <FiTag size={18} /> Category Access
-              </label>
-              <div className="categories-container">
-                {categories.length === 0 ? (
-                  <p>No categories available</p>
-                ) : (
-                  categories.map((category, index) => (
-                    <div
-                      className="category-item"
-                      key={index}
-                    >
-                      <input
-                        type="checkbox"
-                        id={`category-${index}`}
-                        value={category}
-                        checked={selectedCategories.includes(category)}
-                        onChange={handleCategoryChange}
-                      />
-                      <label htmlFor={`category-${index}`}>{category}</label>
-                    </div>
-                  ))
-                )}
+            {formData.role === "employee" && (
+              <div className="categories-group">
+                <label>
+                  <FiTag size={18} /> Category Access
+                </label>
+                <div className="categories-container">
+                  {categories.length === 0 ? (
+                    <p>No categories available</p>
+                  ) : (
+                    categories.map((category) => (
+                      <div
+                        className="category-item"
+                        key={category._id}
+                      >
+                        <input
+                          type="checkbox"
+                          id={category._id}
+                          value={category._id}
+                          checked={selectedCategories.includes(category._id)}
+                          onChange={handleCategoryChange}
+                        />
+                        <label htmlFor={category._id}>{category.name}</label>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="bio-group">
               <label>
@@ -346,9 +349,7 @@ const UserForm = () => {
               >
                 Cancel
               </button>
-              <button type="submit">
-                {isEditing ? "Update User" : "Add User"}
-              </button>
+              <button type="submit">{id ? "Update User" : "Add User"}</button>
             </div>
           </div>
         </form>

@@ -86,7 +86,7 @@ const TransactionList = () => {
 
   // Format currency
   const formatCurrency = (amount) => {
-    return "NPR " + parseFloat(amount).toFixed(2);
+    return "$" + parseFloat(amount).toFixed(2);
   };
 
   // Format date for input field

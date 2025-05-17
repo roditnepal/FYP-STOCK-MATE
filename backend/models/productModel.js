@@ -19,9 +19,9 @@ const productSchema = mongoose.Schema(
       trim: true,
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: [true, "Please add a category"],
-      trim: true,
     },
     quantity: {
       type: String,

@@ -329,3 +329,21 @@
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .add-user {
+    padding: 1rem;
+
+    form {
+      grid-template-columns: 1fr;
+
+      .form-left {
+        .image-upload {
+          .image-preview {
+            height: 150px;
+          }
+        }
+      }
+    }
+  }
+}

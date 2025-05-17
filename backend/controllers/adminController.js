@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const cloudinary = require("cloudinary");
 
 // Get All Users
 const getAllUsers = asyncHandler(async (req, res) => {
@@ -22,8 +23,29 @@ const getUser = asyncHandler(async (req, res) => {
 
 // Create New User
 const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role, categories, phone, bio, photo } =
-    req.body;
+  const { name, email, password, role, categories, phone, bio } = req.body;
+  let fileData = {};
+
+  // Handle Image Upload
+  if (req.file) {
+    // Assuming Cloudinary is configured globally or accessible here
+    try {
+      const uploadedFile = await cloudinary.uploader.upload(
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString(
+          "base64"
+        )}`,
+        { folder: "users" } // Optional: specify a folder
+      );
+      fileData.photo = uploadedFile.secure_url;
+    } catch (error) {
+      console.error("Cloudinary Upload Error (Create User):", error);
+      res.status(500);
+      throw new Error("Image upload failed.");
+    }
+  } else {
+    // Use the default photo if no file is uploaded and not provided in body
+    fileData.photo = req.body.photo || "https://i.ibb.co/4pDNDk1/avatar.png";
+  }
 
   // Validation
   if (!name || !email || !password) {
@@ -56,7 +78,7 @@ const createUser = asyncHandler(async (req, res) => {
     categories: categories || [],
     phone: phone || "",
     bio: bio || "",
-    photo: photo || "https://i.ibb.co/4pDNDk1/avatar.png",
+    photo: fileData.photo,
   });
 
   if (user) {
@@ -86,15 +108,35 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  // Update user fields
-  const { name, email, role, categories, phone, bio, photo } = req.body;
+  // Update user fields from req.body
+  const { name, email, role, categories, phone, bio } = req.body;
 
   if (name) user.name = name;
   if (phone) user.phone = phone;
   if (bio) user.bio = bio;
-  if (photo) user.photo = photo;
   if (role) user.role = role;
   if (categories) user.categories = categories;
+
+  // Handle Image Upload if a new file is provided
+  if (req.file) {
+    try {
+      const uploadedFile = await cloudinary.uploader.upload(
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString(
+          "base64"
+        )}`,
+        { folder: "users" } // Optional: specify a folder
+      );
+      user.photo = uploadedFile.secure_url; // Update photo with new URL
+    } catch (error) {
+      console.error("Cloudinary Upload Error (Update User):", error);
+      res.status(500);
+      throw new Error("Image upload failed.");
+    }
+  } else if (req.body.photo) {
+    // If photo is provided in body but no file, assume it's the existing URL (no change or clearing)
+    // If you want to allow clearing the photo by sending photo: '', handle that here
+    user.photo = req.body.photo; // Keep existing or update from body if provided
+  }
 
   // For email, check for uniqueness
   if (email && email !== user.email) {

@@ -13,8 +13,7 @@ import {
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./ProductForm.scss";
-import { getProducts } from "../../../services/productService";
-import { toast } from "react-toastify";
+import categoryService from "../../../services/categoryService";
 
 const ProductForm = ({
   product,
@@ -29,21 +28,16 @@ const ProductForm = ({
 }) => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [imageError, setImageError] = useState(null);
 
-  // Fetch available categories from products
+  // Fetch categories
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const products = await getProducts();
-      const uniqueCategories = [
-        ...new Set(products.map((product) => product.category).filter(Boolean)),
-      ];
-      setCategories(uniqueCategories);
+      const data = await categoryService.getCategories();
+      setCategories(data);
       setIsLoading(false);
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to fetch categories");
+      console.error("Error fetching categories:", error);
       setIsLoading(false);
     }
   };
@@ -51,35 +45,6 @@ const ProductForm = ({
   useEffect(() => {
     fetchCategories();
   }, []);
-
-  // Validate image file before preview
-  const validateImage = (file) => {
-    const allowedFormats = ["image/png", "image/jpg", "image/jpeg"];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!allowedFormats.includes(file.type)) {
-      return "Unsupported file format. Please use JPG, JPEG, or PNG.";
-    }
-    if (file.size > maxSize) {
-      return "File size exceeds 5MB limit.";
-    }
-    return null;
-  };
-
-  // Handle image change with validation
-  const onImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const error = validateImage(file);
-      if (error) {
-        setImageError(error);
-        e.target.value = null; // Reset input
-        return;
-      }
-      setImageError(null);
-      handleImageChange(e);
-    }
-  };
 
   return (
     <div className="add-product">
@@ -97,17 +62,19 @@ const ProductForm = ({
               <FiUpload size={18} />
               <div>Product Image</div>
             </label>
-            <p className="formats">Supported formats: jpg, jpeg, png (max 5MB)</p>
+            <p className="formats">Supported formats: jpg, jpeg, png</p>
             <input
               type="file"
               name="image"
-              onChange={onImageChange}
-              accept="image/png,image/jpg,image/jpeg"
+              onChange={handleImageChange}
+              accept="image/*"
             />
-            {imageError && <p className="error">{imageError}</p>}
             {imagePreview ? (
               <div className="image-preview">
-                <img src={imagePreview} alt="product" />
+                <img
+                  src={imagePreview}
+                  alt="product"
+                />
               </div>
             ) : (
               <div className="image-preview">
@@ -142,27 +109,20 @@ const ProductForm = ({
               onChange={handleInputChange}
               required
             >
-              <option value="" disabled>
+              <option
+                value=""
+                disabled
+              >
                 Select a category
               </option>
-              {categories.length > 0 ? (
-                categories.map((category, index) => (
-                  <option key={index} value={category}>
-                    {category}
-                  </option>
-                ))
-              ) : (
-                <>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Food">Food</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Others">Others</option>
-                </>
-              )}
-              {categories.length > 0 && !categories.includes("Others") && (
-                <option value="Others">Others</option>
-              )}
+              {categories.map((category) => (
+                <option
+                  key={category._id}
+                  value={category._id}
+                >
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -236,7 +196,9 @@ const ProductForm = ({
           </div>
 
           <div className="submit-btn">
-            <button type="submit">{isEdit ? "Update Product" : "Add Product"}</button>
+            <button type="submit">
+              {isEdit ? "Update Product" : "Add Product"}
+            </button>
           </div>
         </div>
       </form>

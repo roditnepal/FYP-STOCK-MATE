@@ -44,7 +44,7 @@ const ExpiringProductModal = ({
             )}
             {product.category && (
               <p>
-                <strong>Category:</strong> {product.category}
+                <strong>Category:</strong> {product.category?.name || "N/A"}
               </p>
             )}
             {product.description && (

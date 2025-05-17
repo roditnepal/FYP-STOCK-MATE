@@ -60,7 +60,11 @@ const TransactionForm = () => {
       const filtered = products.filter(
         (product) =>
           product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-          product.category.toLowerCase().includes(productSearch.toLowerCase())
+          (product.category &&
+            product.category.name &&
+            product.category.name
+              .toLowerCase()
+              .includes(productSearch.toLowerCase()))
       );
       setFilteredProducts(filtered);
     } else {

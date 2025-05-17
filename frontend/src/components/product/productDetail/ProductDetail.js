@@ -80,7 +80,9 @@ const ProductDetail = () => {
                 </div>
                 <div className="meta-item">
                   <span className="label">Category:</span>
-                  <span className="value">{product.category}</span>
+                  <span className="value">
+                    {product.category?.name || "N/A"}
+                  </span>
                 </div>
                 <div className="meta-item">
                   <span className="label">Price:</span>

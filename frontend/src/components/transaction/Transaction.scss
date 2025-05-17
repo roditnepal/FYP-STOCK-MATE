@@ -943,23 +943,34 @@
     }
 
     .charts {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 1.5rem;
       margin-top: 2rem;
-
-      @media screen and (max-width: 1200px) {
-        grid-template-columns: 1fr;
-      }
 
       .chart-container {
         background: var(--color-white);
         padding: 1.5rem;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(30, 39, 73, 0.04);
-        width: 100%;
+        width: calc(50% - 0.75rem);
         height: 300px;
         position: relative;
+        max-width: 500px;
+
+        display: flex;
+        flex-direction: column;
+
+        @media screen and (max-width: 768px) {
+          height: 280px;
+          width: 100%;
+          max-width: none;
+        }
+
+        @media screen and (max-width: 480px) {
+          height: 250px;
+        }
 
         h3 {
           font-size: 1.4rem;
@@ -975,23 +986,12 @@
           }
         }
 
+        .recharts-responsive-container {
+          flex-grow: 1;
+        }
+
         canvas {
-          position: absolute;
-          top: 45px;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          width: 100%;
-          height: calc(100% - 45px) !important;
-          padding: 0.5rem;
-        }
-
-        @media screen and (max-width: 768px) {
-          height: 280px;
-        }
-
-        @media screen and (max-width: 480px) {
-          height: 250px;
+          /* display: none; */
         }
       }
     }

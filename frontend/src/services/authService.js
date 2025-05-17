@@ -33,22 +33,33 @@ export const registerUser = async (userData) => {
 // Login User
 export const loginUser = async (userData) => {
   try {
+    console.log("Attempting login with:", { email: userData.email });
+
     const response = await axios.post(
       `${BACKEND_URL}/api/users/login`,
       userData,
       { withCredentials: true }
     );
-    if (response.statusText === "OK") {
+
+    console.log("Login response:", response.data);
+
+    if (response.data) {
       toast.success("Login Successful...");
+      return response.data;
     }
-    return response.data;
   } catch (error) {
+    console.error("Login error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
     const message =
       (error.response && error.response.data && error.response.data.message) ||
       error.message ||
       error.toString();
     toast.error(message);
-    throw new Error(message);
+    throw error;
   }
 };
 

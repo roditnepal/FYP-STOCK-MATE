@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./ProductSummary.scss";
 import { AiFillDollarCircle } from "react-icons/ai";
 import { BsCart4, BsCartX } from "react-icons/bs";
@@ -13,6 +13,7 @@ import {
   selectOutOfStock,
   selectTotalStoreValue,
 } from "../../../redux/features/product/productSlice";
+import OutOfStockModal from "../../notification/OutOfStockModal";
 
 // Format Amount
 export const formatNumbers = (x) => {
@@ -24,12 +25,17 @@ const ProductSummary = ({ products }) => {
   const totalStoreValue = useSelector(selectTotalStoreValue);
   const outOfStock = useSelector(selectOutOfStock);
   const category = useSelector(selectCategory);
+  const [showOutOfStockModal, setShowOutOfStockModal] = useState(false);
 
   useEffect(() => {
     dispatch(CALC_STORE_VALUE(products));
     dispatch(CALC_OUTOFSTOCK(products));
     dispatch(CALC_CATEGORY(products));
   }, [dispatch, products]);
+
+  const outOfStockProducts = products.filter(
+    (product) => product.quantity === "0"
+  );
 
   return (
     <div className="product-summary">
@@ -60,7 +66,11 @@ const ProductSummary = ({ products }) => {
           </div>
         </div>
 
-        <div className="info-box card3">
+        <div
+          className="info-box card3"
+          onClick={() => setShowOutOfStockModal(true)}
+          style={{ cursor: "pointer" }}
+        >
           <div className="info-icon">
             <BsCartX size={32} />
           </div>
@@ -80,6 +90,13 @@ const ProductSummary = ({ products }) => {
           </div>
         </div>
       </div>
+
+      {showOutOfStockModal && (
+        <OutOfStockModal
+          products={outOfStockProducts}
+          onClose={() => setShowOutOfStockModal(false)}
+        />
+      )}
     </div>
   );
 };

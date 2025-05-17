@@ -12,6 +12,9 @@ const TransactionDetail = () => {
 
   const { transaction, isLoading } = useSelector((state) => state.transaction);
 
+  // Log the transaction data received from the backend
+  console.log("Transaction data received:", transaction);
+
   useEffect(() => {
     dispatch(getTransaction(id));
   }, [dispatch, id]);
@@ -24,7 +27,7 @@ const TransactionDetail = () => {
 
   // Format currency
   const formatCurrency = (amount) => {
-    return "NPR " + parseFloat(amount).toFixed(2);
+    return "$" + parseFloat(amount).toFixed(2);
   };
 
   // Print receipt
@@ -141,10 +144,10 @@ const TransactionDetail = () => {
             <p>
               <strong>Performed By:</strong>{" "}
               <span className="performed-by">
-                {transaction.createdBy
-                  ? transaction.createdBy.role === "admin"
+                {transaction.performedBy && transaction.performedBy.user
+                  ? transaction.performedBy.user.role === "admin"
                     ? "Admin"
-                    : transaction.createdBy.name
+                    : transaction.performedBy.user.name
                   : "User not found"}
               </span>
             </p>
