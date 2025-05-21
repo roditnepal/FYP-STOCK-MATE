@@ -1,7 +1,14 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
-import { FiBox, FiInfo, FiArrowLeft } from "react-icons/fi";
+import {
+  FiBox,
+  FiInfo,
+  FiArrowLeft,
+  FiEdit,
+  FiUser,
+  FiAlertTriangle,
+} from "react-icons/fi";
 import useRedirectLoggedOutUser from "../../../customHook/useRedirectLoggedOutUser";
 import {
   selectIsLoggedIn,
@@ -31,6 +38,20 @@ const ProductDetail = () => {
       return <span className="in-stock">In Stock</span>;
     }
     return <span className="out-of-stock">Out Of Stock</span>;
+  };
+
+  const lowStockWarning = (quantity, threshold) => {
+    const quantityNum = parseInt(quantity);
+    const thresholdNum = parseInt(threshold) || 10;
+
+    if (quantityNum > 0 && quantityNum <= thresholdNum) {
+      return (
+        <span className="low-stock-warning">
+          <FiAlertTriangle /> Low Stock: {quantityNum} items left
+        </span>
+      );
+    }
+    return null;
   };
 
   useEffect(() => {
@@ -69,6 +90,7 @@ const ProductDetail = () => {
             <div className="product-info">
               <div className="availability">
                 Product Availability: {stockStatus(product.quantity)}
+                {lowStockWarning(product.quantity, product.lowStockThreshold)}
               </div>
 
               <h2 className="product-name">{product.name}</h2>
@@ -84,6 +106,16 @@ const ProductDetail = () => {
                     {product.category?.name || "N/A"}
                   </span>
                 </div>
+                {product.vendor && (
+                  <div className="meta-item vendor-info">
+                    <span className="label">
+                      <FiUser /> Vendor:
+                    </span>
+                    <span className="value">
+                      {product.vendor?.name || "N/A"}
+                    </span>
+                  </div>
+                )}
                 <div className="meta-item">
                   <span className="label">Price:</span>
                   <span className="value">
@@ -94,6 +126,12 @@ const ProductDetail = () => {
                   <span className="label">Quantity:</span>
                   <span className="value">
                     {formatNumbers(product.quantity)}
+                  </span>
+                </div>
+                <div className="meta-item">
+                  <span className="label">Low Stock Alert:</span>
+                  <span className="value">
+                    {product.lowStockThreshold || 10} units
                   </span>
                 </div>
                 <div className="meta-item">
@@ -181,11 +219,15 @@ const ProductDetail = () => {
               )}
 
               <div className="action-buttons">
-                <Link
-                  to="/dashboard"
-                  className="--btn --btn-primary"
-                >
+                <Link to="/dashboard" className="--btn --btn-primary">
                   <FiArrowLeft /> Back to Dashboard
+                </Link>
+
+                <Link
+                  to={`/edit-product/${id}`}
+                  className="--btn --btn-success"
+                >
+                  <FiEdit /> Edit Product
                 </Link>
               </div>
             </div>

@@ -4,7 +4,6 @@ import {
   selectName,
   selectIsLoggedIn,
 } from "../../redux/features/auth/authSlice";
-import { FiBell } from "react-icons/fi";
 import Notification from "../notification/Notification";
 import UserDropdown from "../userDropdown/UserDropdown";
 import "./Header.scss";

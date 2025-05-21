@@ -12,6 +12,8 @@ const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const categoryRoutes = require("./routes/categoryRoute");
 const uploadRoutes = require("./routes/uploadRoutes");
+const vendorRoute = require("./routes/vendorRoute");
+const notificationRoute = require("./routes/notificationRoute");
 
 // Log environment variables (without sensitive data)
 console.log("=== Environment Configuration ===");
@@ -62,7 +64,9 @@ app.use("/api/products", productRoute);
 app.use("/api/transactions", transactionRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/vendors", vendorRoute);
 app.use("/api", uploadRoutes);
+app.use("/api/notifications", notificationRoute); // Add notification route here
 
 //Routes
 app.get("/", (req, res) => {

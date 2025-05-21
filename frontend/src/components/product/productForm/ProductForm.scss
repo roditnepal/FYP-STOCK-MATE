@@ -169,6 +169,13 @@
             box-shadow: 0 0 0 4px rgba(39, 52, 105, 0.1);
           }
         }
+
+        .form-text {
+          color: var(--color-grey);
+          font-size: 1.2rem;
+          margin-top: 0.5rem;
+          display: block;
+        }
       }
     }
 

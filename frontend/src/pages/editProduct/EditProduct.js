@@ -42,6 +42,8 @@ const EditProduct = () => {
         expiryDate: productEdit.expiryDate
           ? new Date(productEdit.expiryDate).toISOString().split("T")[0]
           : "",
+        vendor: productEdit.vendor?._id || productEdit.vendor || "",
+        lowStockThreshold: productEdit.lowStockThreshold || 10,
       });
 
       setImagePreview(productEdit.image ? productEdit.image.filePath : null);
@@ -75,6 +77,11 @@ const EditProduct = () => {
     formData.append("quantity", product.quantity);
     formData.append("price", product.price);
     formData.append("description", description);
+    formData.append("lowStockThreshold", Number(product.lowStockThreshold));
+
+    if (product.vendor) {
+      formData.append("vendor", product.vendor);
+    }
 
     // Handle expiry date
     if (product.expiryDate) {

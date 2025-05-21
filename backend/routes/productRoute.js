@@ -7,6 +7,8 @@ const {
   deleteProduct,
   updateProduct,
   getExpiringProducts,
+  getLowStockProducts,
+  getVendorProducts,
 } = require("../controllers/productController");
 const { uploadMiddleware } = require("../utils/fileUpload");
 const { protect } = require("../middleWare/authMiddleware");
@@ -17,6 +19,15 @@ router.post("/", protect, uploadMiddleware, createProduct);
 // Get all products route
 router.get("/", protect, getProducts);
 
+// Get low stock products
+router.get("/low-stock", protect, getLowStockProducts);
+
+// Get expiring products route
+router.get("/expiring", protect, getExpiringProducts);
+
+// Get products by vendor route
+router.get("/vendor/:vendorId", protect, getVendorProducts);
+
 // Get single product route
 router.get("/:id", protect, getProduct);
 
@@ -25,8 +36,5 @@ router.delete("/:id", protect, deleteProduct);
 
 // Update product route
 router.patch("/:id", protect, uploadMiddleware, updateProduct);
-
-// Get expiring products route
-router.get("/expiring", protect, getExpiringProducts);
 
 module.exports = router;

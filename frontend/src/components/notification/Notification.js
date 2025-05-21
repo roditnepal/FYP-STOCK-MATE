@@ -1,19 +1,26 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { FaBell, FaSync, FaInfoCircle, FaTimes } from "react-icons/fa";
+import { FaBell, FaSync, FaInfoCircle, FaTimes, FaList } from "react-icons/fa";
+import { FiAlertTriangle, FiBox } from "react-icons/fi";
 import "./Notification.scss";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/features/auth/authSlice";
 import { getExpiringProducts } from "../../redux/features/product/productService";
+import productService from "../../redux/features/product/productService";
 import { toast } from "react-toastify";
 import ExpiringProductModal from "./ExpiringProductModal";
+import { Link } from "react-router-dom";
+import LowStockModal from "./LowStockModal";
 
 const Notification = () => {
   const [expiringProducts, setExpiringProducts] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [error, setError] = useState(false);
+  const [activeTab, setActiveTab] = useState("expiring"); // 'expiring' or 'lowstock'
+  const [modalType, setModalType] = useState("expiring"); // 'expiring' or 'lowstock'
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   // Function to filter products expiring within 6 months
@@ -72,31 +79,71 @@ const Notification = () => {
     }
   }, [isLoggedIn]);
 
+  const fetchLowStockProducts = useCallback(async () => {
+    if (isLoggedIn) {
+      try {
+        setIsLoading(true);
+        setError(false);
+        const products = await productService.getLowStockProducts();
+
+        if (Array.isArray(products)) {
+          setLowStockProducts(products);
+        } else {
+          console.error(
+            "Invalid response format for low stock products:",
+            products
+          );
+          setLowStockProducts([]);
+          setError(true);
+        }
+      } catch (error) {
+        console.error("Error fetching low stock products:", error);
+        setError(true);
+        setLowStockProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [isLoggedIn]);
+
   useEffect(() => {
     fetchExpiringProducts();
+    fetchLowStockProducts();
 
-    // Check every day for new expiring products
-    const interval = setInterval(fetchExpiringProducts, 86400000);
-    return () => clearInterval(interval);
-  }, [fetchExpiringProducts]);
+    // Check for new expiring products daily
+    const expiringInterval = setInterval(fetchExpiringProducts, 86400000);
 
-  // Get the first expiring product (if any)
+    // Check low stock products every 5 minutes
+    const lowStockInterval = setInterval(fetchLowStockProducts, 5 * 60 * 1000);
+
+    return () => {
+      clearInterval(expiringInterval);
+      clearInterval(lowStockInterval);
+    };
+  }, [fetchExpiringProducts, fetchLowStockProducts]);
+
+  // Get the first products from each category (if any)
   const firstExpiringProduct =
     expiringProducts.length > 0 ? expiringProducts[0] : null;
+  const firstLowStockProduct =
+    lowStockProducts.length > 0 ? lowStockProducts[0] : null;
+
+  // Get total notification count
+  const notificationCount = expiringProducts.length + lowStockProducts.length;
 
   const handleIconClick = () => {
     if (error) {
       // If there was an error, retry fetching
       fetchExpiringProducts();
+      fetchLowStockProducts();
       return;
     }
 
-    if (expiringProducts.length > 0) {
-      // If there are expiring products, show the first one in the modal
-      setSelectedProduct(firstExpiringProduct);
-      setShowModal(true);
+    if (notificationCount > 0) {
+      // Toggle dropdown to show notifications
+      toggleDropdown();
     } else {
-      // If no expiring products, just toggle the dropdown
+      // If no notifications, just toggle the dropdown
       toggleDropdown();
     }
   };
@@ -105,8 +152,9 @@ const Notification = () => {
 
   const closeDropdown = () => setIsOpen(false);
 
-  const handleProductClick = (product) => {
+  const handleProductClick = (product, type) => {
     setSelectedProduct(product);
+    setModalType(type);
     setShowModal(true);
     setIsOpen(false);
   };
@@ -123,6 +171,7 @@ const Notification = () => {
 
   const handleRetry = () => {
     fetchExpiringProducts();
+    fetchLowStockProducts();
   };
 
   // Format expiry date with time remaining
@@ -145,12 +194,21 @@ const Notification = () => {
     }
   };
 
+  const getStockLevel = (quantity, threshold) => {
+    const stockPercentage = (quantity / threshold) * 100;
+
+    if (stockPercentage <= 30) {
+      return "critical";
+    } else if (stockPercentage <= 70) {
+      return "warning";
+    } else {
+      return "normal";
+    }
+  };
+
   return (
     <div className="notification">
-      <div
-        className="notification-icon"
-        onClick={handleIconClick}
-      >
+      <div className="notification-icon" onClick={handleIconClick}>
         {isLoading ? (
           <FaSync className="sync-icon" />
         ) : error ? (
@@ -158,51 +216,158 @@ const Notification = () => {
         ) : (
           <FaBell />
         )}
-        {!isLoading && !error && expiringProducts.length > 0 && (
-          <span className="notification-badge">{expiringProducts.length}</span>
+        {!isLoading && !error && notificationCount > 0 && (
+          <span className="notification-badge">{notificationCount}</span>
         )}
         {error && <span className="notification-badge error-badge">!</span>}
       </div>
 
-      {isOpen && !error && expiringProducts.length > 0 && (
-        <div className="notification-dropdown">
+      {isOpen && !error && (
+        <div className="notification-dropdown notification-combined">
           <div className="dropdown-header">
-            <h4>Products Expiring Soon</h4>
-            <button
-              className="close-btn"
-              onClick={closeDropdown}
-            >
+            <h4>Notifications</h4>
+            <button className="close-btn" onClick={closeDropdown}>
               <FaTimes />
             </button>
           </div>
-          {expiringProducts.map((product) => (
-            <div
-              key={product._id}
-              className="notification-item"
-              onClick={() => handleProductClick(product)}
-            >
-              <p>{product.name}</p>
-              <p>Expires: {formatExpiryDate(product.expiryDate)}</p>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {isOpen && !error && expiringProducts.length === 0 && !isLoading && (
-        <div className="notification-dropdown empty-dropdown">
-          <div className="dropdown-header">
-            <h4>No Expiring Products</h4>
+          <div className="notification-tabs">
             <button
-              className="close-btn"
-              onClick={closeDropdown}
+              className={`tab-btn ${activeTab === "expiring" ? "active" : ""}`}
+              onClick={() => setActiveTab("expiring")}
             >
-              <FaTimes />
+              <FiAlertTriangle />
+              Expiring Soon
+              {expiringProducts.length > 0 && (
+                <span className="tab-badge">{expiringProducts.length}</span>
+              )}
+            </button>
+            <button
+              className={`tab-btn ${activeTab === "lowstock" ? "active" : ""}`}
+              onClick={() => setActiveTab("lowstock")}
+            >
+              <FiBox />
+              Low Stock
+              {lowStockProducts.length > 0 && (
+                <span className="tab-badge">{lowStockProducts.length}</span>
+              )}
             </button>
           </div>
-          <div className="empty-notification">
-            <FaInfoCircle className="info-icon" />
-            <p>You don't have any products expiring in the next 6 months.</p>
+
+          <div className="notification-body">
+            {/* Expiring Products Tab Content */}
+            {activeTab === "expiring" && (
+              <div className="tab-content">
+                {isLoading ? (
+                  <div className="loading-notification">Loading...</div>
+                ) : expiringProducts.length === 0 ? (
+                  <div className="empty-notification">
+                    <FaInfoCircle className="info-icon" />
+                    <p>
+                      You don't have any products expiring in the next 6 months.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {expiringProducts.map((product) => (
+                      <div
+                        key={product._id}
+                        className="notification-item"
+                        onClick={() => handleProductClick(product, "expiring")}
+                      >
+                        <p className="product-name">{product.name}</p>
+                        <p className="expiry-date">
+                          Expires: {formatExpiryDate(product.expiryDate)}
+                        </p>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Low Stock Tab Content */}
+            {activeTab === "lowstock" && (
+              <div className="tab-content">
+                {isLoading ? (
+                  <div className="loading-notification">Loading...</div>
+                ) : lowStockProducts.length === 0 ? (
+                  <div className="empty-notification">
+                    <FaInfoCircle className="info-icon" />
+                    <p>No low stock alerts at the moment.</p>
+                  </div>
+                ) : (
+                  <ul className="notification-list">
+                    {lowStockProducts.map((product) => (
+                      <li
+                        key={product._id}
+                        className={`notification-item ${getStockLevel(
+                          product.quantity,
+                          product.lowStockThreshold
+                        )}`}
+                        onClick={() => handleProductClick(product, "lowstock")}
+                      >
+                        <div className="notification-content">
+                          <div className="notification-header">
+                            <h4>{product.name}</h4>
+                            <span className="stock-badge">
+                              {product.quantity} left
+                            </span>
+                          </div>
+
+                          <div className="notification-details">
+                            <p>
+                              <strong>Threshold:</strong>{" "}
+                              {product.lowStockThreshold}
+                            </p>
+                          </div>
+
+                          <div className="stock-bar-container">
+                            <div
+                              className="stock-bar"
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  (product.quantity /
+                                    product.lowStockThreshold) *
+                                    100
+                                )}%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Footer with relevant action for current tab */}
+          {activeTab === "expiring" && expiringProducts.length > 0 && (
+            <div className="notification-footer">
+              <Link
+                to="/dashboard"
+                className="view-all"
+                onClick={closeDropdown}
+              >
+                <FaList /> View All Expiring Products
+              </Link>
+            </div>
+          )}
+
+          {activeTab === "lowstock" && lowStockProducts.length > 0 && (
+            <div className="notification-footer">
+              <Link
+                to="/dashboard"
+                className="view-all"
+                onClick={closeDropdown}
+              >
+                <FaList /> View All Low Stock Products
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -210,14 +375,11 @@ const Notification = () => {
         <div className="notification-dropdown error-dropdown">
           <div className="dropdown-header">
             <h4>Error</h4>
-            <button
-              className="close-btn"
-              onClick={closeDropdown}
-            >
+            <button className="close-btn" onClick={closeDropdown}>
               <FaTimes />
             </button>
           </div>
-          <p>Could not fetch expiring products</p>
+          <p>Could not fetch notifications</p>
           <button
             className="--btn --btn-primary retry-btn"
             onClick={handleRetry}
@@ -227,12 +389,20 @@ const Notification = () => {
         </div>
       )}
 
-      {showModal && firstExpiringProduct && (
+      {showModal && modalType === "expiring" && selectedProduct && (
         <ExpiringProductModal
-          product={selectedProduct || firstExpiringProduct}
+          product={selectedProduct}
           onClose={closeModal}
           onViewAll={expiringProducts.length > 1 ? handleViewAllClick : null}
           formatExpiryDate={formatExpiryDate}
+        />
+      )}
+
+      {showModal && modalType === "lowstock" && selectedProduct && (
+        <LowStockModal
+          product={selectedProduct}
+          onClose={closeModal}
+          onViewAll={lowStockProducts.length > 1 ? handleViewAllClick : null}
         />
       )}
     </div>

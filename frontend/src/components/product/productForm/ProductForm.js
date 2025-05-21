@@ -9,11 +9,14 @@ import {
   FiTag,
   FiGrid,
   FiFileText,
+  FiUser,
+  FiAlertCircle,
 } from "react-icons/fi";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./ProductForm.scss";
 import categoryService from "../../../services/categoryService";
+import vendorService from "../../../services/vendorService";
 
 const ProductForm = ({
   product,
@@ -27,6 +30,7 @@ const ProductForm = ({
   isEdit,
 }) => {
   const [categories, setCategories] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch categories
@@ -42,8 +46,22 @@ const ProductForm = ({
     }
   };
 
+  // Fetch vendors
+  const fetchVendors = async () => {
+    setIsLoading(true);
+    try {
+      const data = await vendorService.getVendors();
+      setVendors(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
+    fetchVendors();
   }, []);
 
   return (
@@ -71,10 +89,7 @@ const ProductForm = ({
             />
             {imagePreview ? (
               <div className="image-preview">
-                <img
-                  src={imagePreview}
-                  alt="product"
-                />
+                <img src={imagePreview} alt="product" />
               </div>
             ) : (
               <div className="image-preview">
@@ -109,18 +124,30 @@ const ProductForm = ({
               onChange={handleInputChange}
               required
             >
-              <option
-                value=""
-                disabled
-              >
+              <option value="" disabled>
                 Select a category
               </option>
               {categories.map((category) => (
-                <option
-                  key={category._id}
-                  value={category._id}
-                >
+                <option key={category._id} value={category._id}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>
+              <FiUser size={18} /> Vendor
+            </label>
+            <select
+              name="vendor"
+              value={product?.vendor || ""}
+              onChange={handleInputChange}
+            >
+              <option value="">No Vendor (Internal Product)</option>
+              {vendors.map((vendor) => (
+                <option key={vendor._id} value={vendor._id}>
+                  {vendor.name}
                 </option>
               ))}
             </select>
@@ -159,6 +186,23 @@ const ProductForm = ({
 
           <div className="form-group">
             <label>
+              <FiAlertCircle size={18} /> Low Stock Threshold
+            </label>
+            <input
+              type="number"
+              min="1"
+              placeholder="Low stock alert threshold"
+              name="lowStockThreshold"
+              value={product?.lowStockThreshold || "10"}
+              onChange={handleInputChange}
+            />
+            <small className="form-text">
+              Get notified when stock falls below this number
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label>
               <FiCalendar size={18} /> Expiry Date
             </label>
             <input
@@ -171,8 +215,10 @@ const ProductForm = ({
               }
               onChange={handleInputChange}
               min={new Date().toISOString().split("T")[0]}
-              required
             />
+            <small className="form-text">
+              Optional: Leave empty if product does not expire
+            </small>
           </div>
 
           <div className="description-group">

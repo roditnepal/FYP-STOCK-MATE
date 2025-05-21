@@ -23,10 +23,19 @@ const productSchema = mongoose.Schema(
       ref: "Category",
       required: [true, "Please add a category"],
     },
+    vendor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vendor",
+      required: false,
+    },
     quantity: {
       type: String,
       required: [true, "Please add a quantity"],
       trim: true,
+    },
+    lowStockThreshold: {
+      type: Number,
+      default: 10,
     },
     price: {
       type: String,
@@ -35,7 +44,7 @@ const productSchema = mongoose.Schema(
     },
     description: {
       type: String,
-      required: [true, "Please add a description"],
+      required: false,
       trim: true,
     },
     image: {
@@ -111,11 +120,30 @@ productSchema.methods.checkExpiringSoon = function () {
   return this.expiryDate <= thirtyDaysFromNow;
 };
 
+// Add method to check if product is low on stock
+productSchema.methods.isLowOnStock = function () {
+  const quantityNum = parseInt(this.quantity);
+  if (isNaN(quantityNum)) return false;
+  return quantityNum <= this.lowStockThreshold;
+};
+
 // Pre-save middleware to update isExpiringSoon
 productSchema.pre("save", function (next) {
   if (this.expiryDate) {
     this.isExpiringSoon = this.checkExpiringSoon();
   }
+
+  // Check if product needs to generate a low stock notification
+  const quantityNum = parseInt(this.quantity);
+  if (
+    !isNaN(quantityNum) &&
+    this.isModified("quantity") &&
+    this.isLowOnStock()
+  ) {
+    // We'll handle notification creation in the controller
+    this._lowStockNotificationNeeded = true;
+  }
+
   next();
 });
 

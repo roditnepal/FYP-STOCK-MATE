@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
+const Notification = require("../models/notificationModel");
+const Vendor = require("../models/vendorModel");
 
 const path = require("path");
 console.log(
@@ -16,27 +18,48 @@ const { fileSizeFormatter } = require("../utils/fileUpload");
 
 const cloudinary = require("cloudinary").v2;
 
+// Helper function to create low stock notification
+const createLowStockNotification = async (product) => {
+  try {
+    const vendorInfo = product.vendor
+      ? `from vendor ${product.vendor.name}`
+      : "";
+    const notification = new Notification({
+      message: `Low stock alert: ${product.name} ${vendorInfo} has only ${product.quantity} units left.`,
+      productId: product._id,
+    });
+    await notification.save();
+    console.log(`Low stock notification created for ${product.name}`);
+  } catch (error) {
+    console.error("Error creating low stock notification:", error);
+  }
+};
+
 // Create Prouct
 const createProduct = asyncHandler(async (req, res) => {
   console.log("=== Starting Product Creation ===");
   console.log("Request body:", req.body);
   console.log("Request file:", req.file);
 
-  const { name, sku, category, quantity, price, description, expiryDate } =
-    req.body;
+  const {
+    name,
+    sku,
+    category,
+    quantity,
+    price,
+    description,
+    expiryDate,
+    vendor,
+    lowStockThreshold,
+  } = req.body;
 
-  // Validation
-  if (
-    !name ||
-    !category ||
-    !quantity ||
-    !price ||
-    !description ||
-    !expiryDate
-  ) {
+  // Validation - making expiry date optional
+  if (!name || !category || !quantity || !price) {
     console.log("Validation failed - missing required fields");
     res.status(400);
-    throw new Error("Please fill in all fields including expiry date");
+    throw new Error(
+      "Please fill in all required fields (name, category, quantity, price)"
+    );
   }
 
   // Check if category exists
@@ -45,6 +68,17 @@ const createProduct = asyncHandler(async (req, res) => {
     console.log("Category not found:", category);
     res.status(400);
     throw new Error("Category not found");
+  }
+
+  // Validate vendor if provided
+  let vendorData = null;
+  if (vendor) {
+    vendorData = await Vendor.findById(vendor);
+    if (!vendorData) {
+      console.log("Vendor not found:", vendor);
+      res.status(400);
+      throw new Error("Vendor not found");
+    }
   }
 
   // Handle Image upload
@@ -107,6 +141,7 @@ const createProduct = asyncHandler(async (req, res) => {
       price,
       description,
       expiryDate,
+      vendor: vendor || null, // Associate vendor if provided
       image: fileData,
       createdBy: {
         user: req.user.id,
@@ -115,6 +150,11 @@ const createProduct = asyncHandler(async (req, res) => {
     });
     console.log("Product created successfully:", product._id);
     res.status(201).json(product);
+
+    // Check stock level for notifications
+    if (product.quantity < 10) {
+      createLowStockNotification(product);
+    }
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(500);
@@ -207,7 +247,16 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 // Update Product
 const updateProduct = asyncHandler(async (req, res) => {
-  const { name, category, quantity, price, description, expiryDate } = req.body;
+  const {
+    name,
+    category,
+    quantity,
+    price,
+    description,
+    expiryDate,
+    vendor,
+    lowStockThreshold,
+  } = req.body;
   const { id } = req.params;
 
   console.log("Update request received:", {
@@ -218,6 +267,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     price,
     description,
     expiryDate,
+    vendor,
+    lowStockThreshold,
   });
 
   const product = await Product.findById(id);
@@ -247,6 +298,15 @@ const updateProduct = asyncHandler(async (req, res) => {
     ) {
       res.status(403);
       throw new Error("You don't have permission to change to this category");
+    }
+  }
+
+  // Validate vendor if provided
+  if (vendor && vendor !== product.vendor) {
+    const vendorExists = await Vendor.findById(vendor);
+    if (!vendorExists) {
+      res.status(400);
+      throw new Error("Vendor not found");
     }
   }
 
@@ -298,6 +358,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     quantity: quantity || product.quantity,
     price: price || product.price,
     description: description || product.description,
+    vendor: vendor || product.vendor,
+    lowStockThreshold: lowStockThreshold || product.lowStockThreshold,
     image: Object.keys(fileData).length === 0 ? product?.image : fileData,
     $push: { editedBy: editInfo },
   };
@@ -315,7 +377,9 @@ const updateProduct = asyncHandler(async (req, res) => {
   const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
-  }).populate("category", "name description");
+  })
+    .populate("category", "name description")
+    .populate("vendor", "name contact");
 
   if (!updatedProduct) {
     res.status(400);
@@ -323,6 +387,15 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   console.log("Product updated successfully:", updatedProduct);
+
+  // Check if quantity is below threshold and create notification if needed
+  const quantityNum = parseInt(updatedProduct.quantity);
+  const thresholdNum = updatedProduct.lowStockThreshold || 10;
+
+  if (!isNaN(quantityNum) && quantityNum <= thresholdNum) {
+    await createLowStockNotification(updatedProduct);
+  }
+
   res.status(200).json(updatedProduct);
 });
 
@@ -340,6 +413,58 @@ const getExpiringProducts = asyncHandler(async (req, res) => {
   res.status(200).json(products);
 });
 
+// Get low stock products
+const getLowStockProducts = asyncHandler(async (req, res) => {
+  try {
+    // Find products where the quantity is below threshold
+    // First convert all products to have proper numeric values
+    const products = await Product.find({
+      isDeleted: { $ne: true },
+    })
+      .populate("category", "name description")
+      .populate("vendor", "name contact email");
+
+    // Filter products where quantity is below the threshold
+    const lowStockProducts = products.filter((product) => {
+      const quantityNum = parseInt(product.quantity);
+      const thresholdNum = product.lowStockThreshold || 10;
+      return !isNaN(quantityNum) && quantityNum <= thresholdNum;
+    });
+
+    res.status(200).json(lowStockProducts);
+  } catch (error) {
+    console.error("Error fetching low stock products:", error);
+    res.status(500);
+    throw new Error("Error fetching low stock products");
+  }
+});
+
+// Get vendor products
+const getVendorProducts = asyncHandler(async (req, res) => {
+  const { vendorId } = req.params;
+
+  try {
+    // Verify vendor exists
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      res.status(404);
+      throw new Error("Vendor not found");
+    }
+
+    // Find all products associated with this vendor
+    const products = await Product.find({
+      vendor: vendorId,
+      isDeleted: { $ne: true },
+    }).populate("category", "name description");
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching vendor products:", error);
+    res.status(500);
+    throw new Error(`Error fetching vendor products: ${error.message}`);
+  }
+});
+
 module.exports = {
   createProduct,
   getProducts,
@@ -347,4 +472,6 @@ module.exports = {
   deleteProduct,
   updateProduct,
   getExpiringProducts,
+  getLowStockProducts,
+  getVendorProducts,
 };

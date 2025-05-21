@@ -36,25 +36,33 @@ const updateProduct = async (id, formData) => {
 const getExpiringProducts = async () => {
   try {
     // Use a query parameter instead of a path parameter to avoid ObjectId casting error
-    const response = await axios.get(`${API_URL}`, {
-      params: { expiring: true },
-      timeout: 10000, // 10 second timeout
-    });
-
-    // Validate response data
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else {
-      console.error(
-        "Invalid response format from expiring products API:",
-        response.data
-      );
-      throw new Error("Invalid response format");
-    }
+    const response = await axios.get(`${API_URL}expiring`);
+    return response.data;
   } catch (error) {
-    console.error("Error fetching expiring products:", error.message);
-    // Re-throw the error to be handled by the component
-    throw error;
+    console.error("Error in getExpiringProducts:", error);
+    return [];
+  }
+};
+
+// Get Low Stock Products
+const getLowStockProducts = async () => {
+  try {
+    const response = await axios.get(`${API_URL}low-stock`);
+    return response.data;
+  } catch (error) {
+    console.error("Error in getLowStockProducts:", error);
+    return [];
+  }
+};
+
+// Get Products by Vendor
+const getVendorProducts = async (vendorId) => {
+  try {
+    const response = await axios.get(`${API_URL}vendor/${vendorId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error in getVendorProducts for vendor ${vendorId}:`, error);
+    return [];
   }
 };
 
@@ -65,6 +73,8 @@ const productService = {
   deleteProduct,
   updateProduct,
   getExpiringProducts,
+  getLowStockProducts,
+  getVendorProducts,
 };
 
 export default productService;

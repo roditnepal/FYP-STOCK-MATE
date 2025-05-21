@@ -15,6 +15,8 @@ const initialState = {
   price: "",
   description: "",
   expiryDate: "",
+  vendor: "",
+  lowStockThreshold: "10",
 };
 
 const AddProduct = () => {
@@ -27,7 +29,15 @@ const AddProduct = () => {
 
   const isLoading = useSelector(selectIsLoading);
 
-  const { name, category, price, quantity, expiryDate } = product;
+  const {
+    name,
+    category,
+    price,
+    quantity,
+    expiryDate,
+    vendor,
+    lowStockThreshold,
+  } = product;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,6 +66,12 @@ const AddProduct = () => {
     formData.append("price", price);
     formData.append("description", description);
     formData.append("expiryDate", expiryDate);
+    formData.append("lowStockThreshold", Number(lowStockThreshold));
+
+    if (vendor) {
+      formData.append("vendor", vendor);
+    }
+
     if (productImage) {
       formData.append("image", productImage);
     }

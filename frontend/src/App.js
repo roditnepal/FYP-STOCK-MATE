@@ -27,6 +27,9 @@ import UserList from "./pages/admin/UserList";
 import UserForm from "./pages/admin/UserForm";
 import CategoryList from "./pages/admin/CategoryList";
 import CategoryForm from "./pages/admin/CategoryForm";
+import VendorList from "./pages/admin/vendors/VendorList";
+import VendorForm from "./pages/admin/vendors/VendorForm";
+import VendorProducts from "./pages/vendor/VendorProducts";
 
 axios.defaults.withCredentials = true;
 
@@ -87,26 +90,11 @@ function App() {
         containerClassName="Toastify__toast-container"
       />
       <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-        <Route
-          path="/forgot"
-          element={<Forgot />}
-        />
-        <Route
-          path="/resetpassword/:resetToken"
-          element={<Reset />}
-        />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot" element={<Forgot />} />
+        <Route path="/resetpassword/:resetToken" element={<Reset />} />
 
         <Route
           path="/dashboard"
@@ -266,6 +254,48 @@ function App() {
             <Sidebar>
               <Layout>
                 <CategoryForm />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        {/* Vendor Routes */}
+        <Route
+          path="/admin/vendors"
+          element={
+            <Sidebar>
+              <Layout>
+                <VendorList />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        <Route
+          path="/admin/vendor/add"
+          element={
+            <Sidebar>
+              <Layout>
+                <VendorForm />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        <Route
+          path="/admin/vendor/edit/:id"
+          element={
+            <Sidebar>
+              <Layout>
+                <VendorForm />
+              </Layout>
+            </Sidebar>
+          }
+        />
+        {/* Vendor Products Route */}
+        <Route
+          path="/vendor/products/:id"
+          element={
+            <Sidebar>
+              <Layout>
+                <VendorProducts />
               </Layout>
             </Sidebar>
           }
