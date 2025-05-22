@@ -44,11 +44,11 @@ const menuItems = [
     ],
     adminOnly: true,
   },
-  {
-    title: "Report Bug",
-    icon: <FaCommentAlt />,
-    path: "/contact-us",
-  },
+  // {
+  //   title: "Report Bug",
+  //   icon: <FaCommentAlt />,
+  //   path: "/contact-us",
+  // },
 ];
 
 export default menuItems;

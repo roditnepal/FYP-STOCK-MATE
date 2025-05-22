@@ -253,7 +253,7 @@ const TransactionForm = () => {
                 {selectedProducts.map((item) => (
                   <tr key={item.product}>
                     <td>{item.name}</td>
-                    <td>${Number(item.price).toFixed(2)}</td>
+                    <td>Rs {Number(item.price).toFixed(2)}</td>
                     <td>
                       <input
                         type="number"
@@ -264,7 +264,7 @@ const TransactionForm = () => {
                         }
                       />
                     </td>
-                    <td>${Number(item.totalPrice).toFixed(2)}</td>
+                    <td>Rs {Number(item.totalPrice).toFixed(2)}</td>
                     <td>
                       <button
                         type="button"
