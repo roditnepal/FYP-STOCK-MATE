@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/loader/Loader";
@@ -7,6 +7,7 @@ import {
   createProduct,
   selectIsLoading,
 } from "../../redux/features/product/productSlice";
+import vendorService from "../../services/vendorService";
 
 const initialState = {
   name: "",
@@ -15,7 +16,7 @@ const initialState = {
   price: "",
   description: "",
   expiryDate: "",
-  vendor: "",
+  vendors: [], // Changed from vendor to vendors array
   lowStockThreshold: "10",
 };
 
@@ -26,22 +27,32 @@ const AddProduct = () => {
   const [productImage, setProductImage] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [description, setDescription] = useState("");
+  const [availableVendors, setAvailableVendors] = useState([]);
 
   const isLoading = useSelector(selectIsLoading);
 
-  const {
-    name,
-    category,
-    price,
-    quantity,
-    expiryDate,
-    vendor,
-    lowStockThreshold,
-  } = product;
+  // Fetch vendors on mount
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const vendors = await vendorService.getVendors();
+        setAvailableVendors(vendors);
+      } catch (error) {
+        console.error("Failed to fetch vendors:", error);
+      }
+    };
+    fetchVendors();
+  }, []);
+
+  const { name, category, price, quantity, expiryDate, vendors, lowStockThreshold } = product;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProduct({ ...product, [name]: value });
+  };
+
+  const handleVendorChange = (selectedVendors) => {
+    setProduct({ ...product, vendors: selectedVendors });
   };
 
   const handleImageChange = (e) => {
@@ -65,11 +76,14 @@ const AddProduct = () => {
     formData.append("quantity", Number(quantity));
     formData.append("price", price);
     formData.append("description", description);
-    formData.append("expiryDate", expiryDate);
     formData.append("lowStockThreshold", Number(lowStockThreshold));
 
-    if (vendor) {
-      formData.append("vendor", vendor);
+    if (expiryDate) {
+      formData.append("expiryDate", expiryDate);
+    }
+
+    if (vendors.length > 0) {
+      formData.append("vendors", JSON.stringify(vendors));
     }
 
     if (productImage) {
@@ -86,7 +100,6 @@ const AddProduct = () => {
   return (
     <div>
       {isLoading && <Loader />}
-
       <ProductForm
         product={product}
         productImage={productImage}
@@ -95,7 +108,9 @@ const AddProduct = () => {
         setDescription={setDescription}
         handleInputChange={handleInputChange}
         handleImageChange={handleImageChange}
+        handleVendorChange={handleVendorChange}
         saveProduct={saveProduct}
+        availableVendors={availableVendors}
       />
     </div>
   );

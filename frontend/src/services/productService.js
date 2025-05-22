@@ -53,7 +53,7 @@ export const deleteProduct = async (id) => {
 };
 
 // Update Product
-export const updateProduct = async (id, formData) => {
+export const updateProduct = async ({ id, formData }) => {
   try {
     const response = await axios.patch(
       `${BACKEND_URL}/api/products/${id}`,
@@ -83,5 +83,25 @@ export const createProduct = async (formData) => {
       error.message ||
       error.toString();
     toast.error(message);
+  }
+};
+
+// Send Email to Vendors
+export const sendEmailToVendors = async (productId, vendorIds) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_URL}/api/products/send-email`,
+      { productId, vendorIds },
+      { withCredentials: true }
+    );
+    toast.success(response.data.message);
+    return response.data;
+  } catch (error) {
+    const message =
+      (error.response && error.response.data && error.response.data.message) ||
+      error.message ||
+      error.toString();
+    toast.error(message);
+    throw error;
   }
 };

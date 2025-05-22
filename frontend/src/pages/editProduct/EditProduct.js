@@ -11,6 +11,7 @@ import {
   updateProduct,
 } from "../../redux/features/product/productSlice";
 import { FiEdit2 } from "react-icons/fi";
+import vendorService from "../../services/vendorService";
 import "./EditProduct.scss";
 
 const EditProduct = () => {
@@ -18,17 +19,26 @@ const EditProduct = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoading = useSelector(selectIsLoading);
-
   const productEdit = useSelector(selectProduct);
 
   const [product, setProduct] = useState(null);
   const [productImage, setProductImage] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [description, setDescription] = useState("");
+  const [availableVendors, setAvailableVendors] = useState([]);
 
-  // Fetch product when component mounts
+  // Fetch vendors and product on mount
   useEffect(() => {
     dispatch(getProduct(id));
+    const fetchVendors = async () => {
+      try {
+        const vendors = await vendorService.getVendors();
+        setAvailableVendors(vendors);
+      } catch (error) {
+        console.error("Failed to fetch vendors:", error);
+      }
+    };
+    fetchVendors();
   }, [dispatch, id]);
 
   // Update local state when product data is fetched
@@ -42,10 +52,9 @@ const EditProduct = () => {
         expiryDate: productEdit.expiryDate
           ? new Date(productEdit.expiryDate).toISOString().split("T")[0]
           : "",
-        vendor: productEdit.vendor?._id || productEdit.vendor || "",
+        vendors: productEdit.vendors?.map(v => v._id) || [], // Map vendor objects to IDs
         lowStockThreshold: productEdit.lowStockThreshold || 10,
       });
-
       setImagePreview(productEdit.image ? productEdit.image.filePath : null);
       setDescription(productEdit.description || "");
     }
@@ -54,6 +63,10 @@ const EditProduct = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProduct({ ...product, [name]: value });
+  };
+
+  const handleVendorChange = (selectedVendors) => {
+    setProduct({ ...product, vendors: selectedVendors });
   };
 
   const handleImageChange = (e) => {
@@ -67,11 +80,9 @@ const EditProduct = () => {
   const saveProduct = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!product) return;
 
     const formData = new FormData();
-
     formData.append("name", product.name);
     formData.append("category", product.category);
     formData.append("quantity", product.quantity);
@@ -79,15 +90,14 @@ const EditProduct = () => {
     formData.append("description", description);
     formData.append("lowStockThreshold", Number(product.lowStockThreshold));
 
-    if (product.vendor) {
-      formData.append("vendor", product.vendor);
-    }
-
-    // Handle expiry date
     if (product.expiryDate) {
       formData.append("expiryDate", product.expiryDate);
     } else {
       formData.append("expiryDate", "");
+    }
+
+    if (product.vendors.length > 0) {
+      formData.append("vendors", JSON.stringify(product.vendors));
     }
 
     if (productImage) {
@@ -111,13 +121,11 @@ const EditProduct = () => {
   return (
     <div className="edit-product-page">
       {isLoading && <Loader />}
-
       <div className="page-header">
         <h3>
           <FiEdit2 /> Edit Product
         </h3>
       </div>
-
       {product && (
         <ProductForm
           product={product}
@@ -127,8 +135,10 @@ const EditProduct = () => {
           setDescription={setDescription}
           handleInputChange={handleInputChange}
           handleImageChange={handleImageChange}
+          handleVendorChange={handleVendorChange}
           saveProduct={saveProduct}
           isEdit={true}
+          availableVendors={availableVendors}
         />
       )}
     </div>

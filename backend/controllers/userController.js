@@ -17,6 +17,7 @@ const generateToken = (id) => {
 // Register user
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
+  console.log(req.body);
 
   // Validation
   if (!name || !email || !password) {
@@ -98,6 +99,8 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(401);
     throw new Error("Invalid email or password");
   }
+  console.log(password);
+  console.log(user.password);
 
   // Check if password matches
   const passwordIsCorrect = await bcrypt.compare(password, user.password);

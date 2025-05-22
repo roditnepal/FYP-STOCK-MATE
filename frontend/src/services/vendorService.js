@@ -18,6 +18,7 @@ const getVendors = async () => {
 const getVendor = async (id) => {
   try {
     const response = await axios.get(API_URL + id);
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error(`Error fetching vendor ${id}:`, error);
@@ -29,6 +30,7 @@ const getVendor = async (id) => {
 const getVendorsWithProducts = async () => {
   try {
     const response = await axios.get(`${API_URL}with-products`);
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching vendors with products:", error);
@@ -50,7 +52,7 @@ const createVendor = async (vendorData) => {
 // Update a vendor
 const updateVendor = async (id, vendorData) => {
   try {
-    const response = await axios.patch(`${API_URL}${id}`, vendorData);
+    const response = await axios.put(`${API_URL}${id}`, vendorData);
     return response.data;
   } catch (error) {
     console.error(`Error updating vendor ${id}:`, error);

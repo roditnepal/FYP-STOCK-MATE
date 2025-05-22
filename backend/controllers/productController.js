@@ -3,39 +3,119 @@ const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const Notification = require("../models/notificationModel");
 const Vendor = require("../models/vendorModel");
-
+const sendEmail = require("../utils/sendEmail");
 const path = require("path");
-console.log(
-  "Looking for fileUpload at:",
-  path.join(__dirname, "../utils/fileUpload.js")
-);
-console.log(
-  "Exists:",
-  require("fs").existsSync(path.join(__dirname, "../utils/fileUpload.js"))
-);
-
 const { fileSizeFormatter } = require("../utils/fileUpload");
-
 const cloudinary = require("cloudinary").v2;
 
-// Helper function to create low stock notification
-const createLowStockNotification = async (product) => {
+// Helper function to create low stock notification and send email to selected vendors
+const createLowStockNotification = async (product, selectedVendorIds) => {
   try {
-    const vendorInfo = product.vendor
-      ? `from vendor ${product.vendor.name}`
+    const vendors = await Vendor.find({ _id: { $in: selectedVendorIds } });
+    const vendorInfo = vendors.length
+      ? `from vendors ${vendors.map(v => v.name).join(", ")}`
       : "";
+    const message = `Low stock alert: ${product.name} ${vendorInfo} has only ${product.quantity} units left.`;
+    
+    // Create notification
     const notification = new Notification({
-      message: `Low stock alert: ${product.name} ${vendorInfo} has only ${product.quantity} units left.`,
+      message,
       productId: product._id,
     });
     await notification.save();
     console.log(`Low stock notification created for ${product.name}`);
+
+    // Send email to selected vendors with email addresses
+    for (const vendor of vendors) {
+      if (vendor.email) {
+        await sendEmail(
+          vendor.email,
+          `Low Stock Alert: ${product.name}`,
+          `Dear ${vendor.name},\n\nThe product "${product.name}" (SKU: ${product.sku}) has only ${product.quantity} units left in stock. Please consider restocking.\n\nBest regards,\nStockMate Team`
+        );
+      }
+    }
   } catch (error) {
     console.error("Error creating low stock notification:", error);
   }
 };
 
-// Create Prouct
+// Helper function to create expiring product notification and send email to selected vendors
+const createExpiringProductNotification = async (product, selectedVendorIds) => {
+  try {
+    const vendors = await Vendor.find({ _id: { $in: selectedVendorIds } });
+    const vendorInfo = vendors.length
+      ? `from vendors ${vendors.map(v => v.name).join(", ")}`
+      : "";
+    const message = `Expiring soon: ${product.name} ${vendorInfo} expires on ${product.expiryDate.toDateString()}.`;
+    
+    // Create notification
+    const notification = new Notification({
+      message,
+      productId: product._id,
+    });
+    await notification.save();
+    console.log(`Expiring product notification created for ${product.name}`);
+
+    // Send email to selected vendors with email addresses
+    for (const vendor of vendors) {
+      if (vendor.email) {
+        await sendEmail(
+          vendor.email,
+          `Expiring Product Alert: ${product.name}`,
+          `Dear ${vendor.name},\n\nThe product "${product.name}" (SKU: ${product.sku}) is set to expire on ${product.expiryDate.toDateString()}. Please take necessary action.\n\nBest regards,\nStockMate Team`
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error creating expiring product notification:", error);
+  }
+};
+
+// Send email to selected vendors for a product
+const sendEmailToVendors = asyncHandler(async (req, res) => {
+  const { productId, vendorIds } = req.body;
+
+  // Validation
+  if (!productId || !vendorIds || !Array.isArray(vendorIds) || vendorIds.length === 0) {
+    res.status(400);
+    throw new Error("Product ID and vendor IDs are required");
+  }
+
+  // Check if product exists
+  const product = await Product.findById(productId);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  // Validate vendors
+  const vendors = await Vendor.find({ _id: { $in: vendorIds } });
+  if (vendors.length !== vendorIds.length) {
+    res.status(400);
+    throw new Error("One or more vendors not found");
+  }
+
+  // Send email to each vendor
+  try {
+    for (const vendor of vendors) {
+      if (vendor.email) {
+        await sendEmail(
+          `Low Stock Alert: ${product.name}`,
+          `Dear ${vendor.name},\n\nThe product "${product.name}" (SKU: ${product.sku}) has only ${product.quantity} units left in stock. Please consider restocking.\n\nBest regards,\nStockMate Team`,
+          vendor.email
+        );
+      }
+    }
+    res.status(200).json({ message: "Emails sent successfully to selected vendors" });
+  } catch (error) {
+    console.error("Error sending emails to vendors:", error);
+    res.status(500);
+    throw new Error("Failed to send emails: " + error.message);
+  }
+});
+
+// Create Product
 const createProduct = asyncHandler(async (req, res) => {
   console.log("=== Starting Product Creation ===");
   console.log("Request body:", req.body);
@@ -49,11 +129,17 @@ const createProduct = asyncHandler(async (req, res) => {
     price,
     description,
     expiryDate,
-    vendor,
+    vendors,
     lowStockThreshold,
   } = req.body;
 
-  // Validation - making expiry date optional
+  // Parse vendors if provided as JSON string
+  let vendorIds = [];
+  if (vendors) {
+    vendorIds = typeof vendors === 'string' ? JSON.parse(vendors) : vendors;
+  }
+
+  // Validation
   if (!name || !category || !quantity || !price) {
     console.log("Validation failed - missing required fields");
     res.status(400);
@@ -70,14 +156,13 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error("Category not found");
   }
 
-  // Validate vendor if provided
-  let vendorData = null;
-  if (vendor) {
-    vendorData = await Vendor.findById(vendor);
-    if (!vendorData) {
-      console.log("Vendor not found:", vendor);
+  // Validate vendors if provided
+  if (vendorIds.length > 0) {
+    const vendorsExist = await Vendor.find({ _id: { $in: vendorIds } });
+    if (vendorsExist.length !== vendorIds.length) {
+      console.log("One or more vendors not found:", vendorIds);
       res.status(400);
-      throw new Error("Vendor not found");
+      throw new Error("One or more vendors not found");
     }
   }
 
@@ -96,17 +181,10 @@ const createProduct = asyncHandler(async (req, res) => {
     let uploadedFile;
     try {
       console.log("Attempting to upload to Cloudinary...");
-      console.log("Cloudinary config:", {
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY ? "exists" : "missing",
-        api_secret: process.env.CLOUDINARY_API_SECRET ? "exists" : "missing",
-      });
-
       uploadedFile = await cloudinary.uploader.upload(req.file.path, {
         folder: "stockmate",
         resource_type: "image",
       });
-
       console.log("Cloudinary upload successful:", {
         url: uploadedFile.secure_url,
         public_id: uploadedFile.public_id,
@@ -126,8 +204,9 @@ const createProduct = asyncHandler(async (req, res) => {
       fileType: req.file.mimetype,
       fileSize: fileSizeFormatter(req.file.size, 2),
     };
-    console.log("File data prepared:", fileData);
   }
+
+  console.log(vendorIds);
 
   // Create Product
   try {
@@ -137,23 +216,36 @@ const createProduct = asyncHandler(async (req, res) => {
       name,
       sku,
       category,
+      vendors: vendorIds,
       quantity,
       price,
       description,
       expiryDate,
-      vendor: vendor || null, // Associate vendor if provided
+      lowStockThreshold,
       image: fileData,
       createdBy: {
         user: req.user.id,
         name: req.user.name,
       },
     });
+
+    // Update vendors' products array
+    if (vendorIds.length > 0) {
+      await Vendor.updateMany(
+        { _id: { $in: vendorIds } },
+        { $addToSet: { products: product._id } }
+      );
+    }
+
     console.log("Product created successfully:", product._id);
     res.status(201).json(product);
 
-    // Check stock level for notifications
-    if (product.quantity < 10) {
-      createLowStockNotification(product);
+    // Check stock level and expiry for notifications
+    if (parseInt(product.quantity) <= (product.lowStockThreshold || 10) && vendorIds.length > 0) {
+      await createLowStockNotification(product, vendorIds);
+    }
+    if (product.checkExpiringSoon() && vendorIds.length > 0) {
+      await createExpiringProductNotification(product, vendorIds);
     }
   } catch (error) {
     console.error("Error creating product:", error);
@@ -164,24 +256,21 @@ const createProduct = asyncHandler(async (req, res) => {
 
 // Get all Products
 const getProducts = asyncHandler(async (req, res) => {
-  let filter = { isDeleted: { $ne: true } }; // Don't show deleted products
+  let filter = { isDeleted: { $ne: true } };
 
-  // If admin, can see all products
   if (req.user.role === "admin") {
     // No additional filter
   } else {
-    // For non-admin, only show products they have access to
     if (req.user.categories && req.user.categories.length > 0) {
       filter.category = { $in: req.user.categories };
     } else {
-      // If user has no categories, return empty array
       return res.status(200).json([]);
     }
   }
 
   const products = await Product.find(filter)
     .populate("category", "name description")
-    .sort("-createdAt");
+    .populate("vendors", "name contact email");
   res.status(200).json(products);
 });
 
@@ -190,15 +279,15 @@ const getProduct = asyncHandler(async (req, res) => {
   const product = await Product.findOne({
     _id: req.params.id,
     isDeleted: { $ne: true },
-  }).populate("category", "name description");
+  })
+    .populate("category", "name description")
+    .populate("vendors", "name contact email");
 
-  // if product doesnt exist
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
 
-  // Check if user has access to this product's category
   if (req.user.role !== "admin") {
     if (
       !req.user.categories ||
@@ -215,15 +304,12 @@ const getProduct = asyncHandler(async (req, res) => {
 // Delete Product
 const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
-  // if product doesnt exist
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
 
-  // Check authorization based on user role and category
   if (req.user.role !== "admin") {
-    // For non-admin users, check if they have access to this category
     if (
       !req.user.categories ||
       !req.user.categories.includes(product.category)
@@ -233,7 +319,12 @@ const deleteProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  // Soft delete the product
+  // Remove product from vendors' products array
+  await Vendor.updateMany(
+    { products: product._id },
+    { $pull: { products: product._id } }
+  );
+
   product.isDeleted = true;
   product.deletedBy = {
     user: req.user.id,
@@ -254,10 +345,16 @@ const updateProduct = asyncHandler(async (req, res) => {
     price,
     description,
     expiryDate,
-    vendor,
+    vendors,
     lowStockThreshold,
   } = req.body;
   const { id } = req.params;
+
+  // Parse vendors if provided as JSON string
+  let vendorIds = [];
+  if (vendors) {
+    vendorIds = typeof vendors === 'string' ? JSON.parse(vendors) : vendors;
+  }
 
   console.log("Update request received:", {
     id,
@@ -267,21 +364,17 @@ const updateProduct = asyncHandler(async (req, res) => {
     price,
     description,
     expiryDate,
-    vendor,
+    vendors: vendorIds,
     lowStockThreshold,
   });
 
   const product = await Product.findById(id);
-
-  // if product doesnt exist
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
 
-  // Check authorization based on user role and category
   if (req.user.role !== "admin") {
-    // For non-admin users, check if they have access to this category
     if (
       !req.user.categories ||
       !req.user.categories.includes(product.category)
@@ -289,11 +382,9 @@ const updateProduct = asyncHandler(async (req, res) => {
       res.status(403);
       throw new Error("You don't have permission to update this product");
     }
-
-    // Additionally, check if they have access to the new category if it's being changed
     if (
       category &&
-      category !== product.category &&
+      category !== product.category.toString() &&
       (!req.user.categories || !req.user.categories.includes(category))
     ) {
       res.status(403);
@@ -301,39 +392,30 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  // Validate vendor if provided
-  if (vendor && vendor !== product.vendor) {
-    const vendorExists = await Vendor.findById(vendor);
-    if (!vendorExists) {
+  // Validate vendors if provided
+  if (vendorIds.length > 0) {
+    const vendorsExist = await Vendor.find({ _id: { $in: vendorIds } });
+    if (vendorsExist.length !== vendorIds.length) {
       res.status(400);
-      throw new Error("Vendor not found");
+      throw new Error("One or more vendors not found");
     }
   }
 
   // Handle Image upload
   let fileData = {};
   if (req.file) {
-    // Save image to cloudinary
     let uploadedFile;
     try {
-      console.log(
-        "Attempting to upload file to Cloudinary for update:",
-        req.file.path
-      );
+      console.log("Attempting to upload file to Cloudinary for update:", req.file.path);
       uploadedFile = await cloudinary.uploader.upload(req.file.path, {
         folder: "stockmate",
         resource_type: "image",
       });
-      console.log(
-        "Cloudinary upload successful for update:",
-        uploadedFile.secure_url
-      );
+      console.log("Cloudinary upload successful for update:", uploadedFile.secure_url);
     } catch (error) {
       console.error("Cloudinary upload error during update:", error);
       res.status(500);
-      throw new Error(
-        "Image could not be uploaded during update: " + error.message
-      );
+      throw new Error("Image could not be uploaded during update: " + error.message);
     }
 
     fileData = {
@@ -351,6 +433,22 @@ const updateProduct = asyncHandler(async (req, res) => {
     date: new Date(),
   };
 
+  // Update vendors' products array
+  if (vendorIds.length > 0 || product.vendors.length > 0) {
+    // Remove product from old vendors
+    await Vendor.updateMany(
+      { products: product._id },
+      { $pull: { products: product._id } }
+    );
+    // Add product to new vendors
+    if (vendorIds.length > 0) {
+      await Vendor.updateMany(
+        { _id: { $in: vendorIds } },
+        { $addToSet: { products: product._id } }
+      );
+    }
+  }
+
   // Create update object
   const updateData = {
     name: name || product.name,
@@ -358,13 +456,12 @@ const updateProduct = asyncHandler(async (req, res) => {
     quantity: quantity || product.quantity,
     price: price || product.price,
     description: description || product.description,
-    vendor: vendor || product.vendor,
+    vendors: vendorIds.length > 0 ? vendorIds : product.vendors,
     lowStockThreshold: lowStockThreshold || product.lowStockThreshold,
-    image: Object.keys(fileData).length === 0 ? product?.image : fileData,
+    image: Object.keys(fileData).length === 0 ? product.image : fileData,
     $push: { editedBy: editInfo },
   };
 
-  // Handle expiry date
   if (expiryDate) {
     updateData.expiryDate = new Date(expiryDate);
   } else if (expiryDate === "") {
@@ -373,13 +470,12 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   console.log("Updating product with data:", updateData);
 
-  // Update Product
   const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
   })
     .populate("category", "name description")
-    .populate("vendor", "name contact");
+    .populate("vendors", "name contact email");
 
   if (!updatedProduct) {
     res.status(400);
@@ -388,12 +484,14 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   console.log("Product updated successfully:", updatedProduct);
 
-  // Check if quantity is below threshold and create notification if needed
+  // Check notifications
   const quantityNum = parseInt(updatedProduct.quantity);
   const thresholdNum = updatedProduct.lowStockThreshold || 10;
-
-  if (!isNaN(quantityNum) && quantityNum <= thresholdNum) {
-    await createLowStockNotification(updatedProduct);
+  if (!isNaN(quantityNum) && quantityNum <= thresholdNum && vendorIds.length > 0) {
+    await createLowStockNotification(updatedProduct, vendorIds);
+  }
+  if (updatedProduct.checkExpiringSoon() && vendorIds.length > 0) {
+    await createExpiringProductNotification(updatedProduct, vendorIds);
   }
 
   res.status(200).json(updatedProduct);
@@ -406,9 +504,11 @@ const getExpiringProducts = asyncHandler(async (req, res) => {
   thirtyDaysFromNow.setDate(today.getDate() + 30);
 
   const products = await Product.find({
-    user: req.user.id,
     expiryDate: { $gte: today, $lte: thirtyDaysFromNow },
-  });
+    isDeleted: { $ne: true },
+  })
+    .populate("category", "name description")
+    .populate("vendors", "name contact email");
 
   res.status(200).json(products);
 });
@@ -416,15 +516,12 @@ const getExpiringProducts = asyncHandler(async (req, res) => {
 // Get low stock products
 const getLowStockProducts = asyncHandler(async (req, res) => {
   try {
-    // Find products where the quantity is below threshold
-    // First convert all products to have proper numeric values
     const products = await Product.find({
       isDeleted: { $ne: true },
     })
       .populate("category", "name description")
-      .populate("vendor", "name contact email");
+      .populate("vendors", "name contact email");
 
-    // Filter products where quantity is below the threshold
     const lowStockProducts = products.filter((product) => {
       const quantityNum = parseInt(product.quantity);
       const thresholdNum = product.lowStockThreshold || 10;
@@ -444,18 +541,20 @@ const getVendorProducts = asyncHandler(async (req, res) => {
   const { vendorId } = req.params;
 
   try {
-    // Verify vendor exists
     const vendor = await Vendor.findById(vendorId);
     if (!vendor) {
       res.status(404);
       throw new Error("Vendor not found");
     }
 
-    // Find all products associated with this vendor
     const products = await Product.find({
-      vendor: vendorId,
+      vendors: vendorId,
       isDeleted: { $ne: true },
-    }).populate("category", "name description");
+    })
+      .populate("category", "name description")
+      .populate("vendors", "name contact email");
+    
+    console.log(products);
 
     res.status(200).json(products);
   } catch (error) {
@@ -474,4 +573,5 @@ module.exports = {
   getExpiringProducts,
   getLowStockProducts,
   getVendorProducts,
+  sendEmailToVendors,
 };

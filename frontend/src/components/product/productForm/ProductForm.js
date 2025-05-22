@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import Select from "react-select";
 import "./ProductForm.scss";
 import categoryService from "../../../services/categoryService";
 import vendorService from "../../../services/vendorService";
@@ -26,6 +27,7 @@ const ProductForm = ({
   setDescription,
   handleInputChange,
   handleImageChange,
+  handleVendorChange,
   saveProduct,
   isEdit,
 }) => {
@@ -63,6 +65,17 @@ const ProductForm = ({
     fetchCategories();
     fetchVendors();
   }, []);
+
+  const vendorOptions = vendors.map((vendor) => ({
+    value: vendor._id,
+    label: vendor.name,
+  }));
+
+  const selectedVendors = product?.vendors
+    ? product.vendors.map((id) =>
+        vendorOptions.find((option) => option.value === id)
+      ).filter(Boolean)
+    : [];
 
   return (
     <div className="add-product">
@@ -137,20 +150,20 @@ const ProductForm = ({
 
           <div className="form-group">
             <label>
-              <FiUser size={18} /> Vendor
+              <FiUser size={18} /> Vendors
             </label>
-            <select
-              name="vendor"
-              value={product?.vendor || ""}
-              onChange={handleInputChange}
-            >
-              <option value="">No Vendor (Internal Product)</option>
-              {vendors.map((vendor) => (
-                <option key={vendor._id} value={vendor._id}>
-                  {vendor.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              isMulti
+              options={vendorOptions}
+              value={selectedVendors}
+              onChange={(selected) =>
+                handleVendorChange(selected.map((option) => option.value))
+              }
+              placeholder="Select vendors..."
+            />
+            <small className="form-text">
+              Optional: Select multiple vendors or leave empty for internal products
+            </small>
           </div>
 
           <div className="form-group">

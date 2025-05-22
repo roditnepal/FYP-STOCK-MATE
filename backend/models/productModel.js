@@ -23,11 +23,13 @@ const productSchema = mongoose.Schema(
       ref: "Category",
       required: [true, "Please add a category"],
     },
-    vendor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Vendor",
-      required: false,
-    },
+    vendors: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vendor",
+        required: false,
+      },
+    ],
     quantity: {
       type: String,
       required: [true, "Please add a quantity"],
@@ -140,7 +142,6 @@ productSchema.pre("save", function (next) {
     this.isModified("quantity") &&
     this.isLowOnStock()
   ) {
-    // We'll handle notification creation in the controller
     this._lowStockNotificationNeeded = true;
   }
 

@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const vendorSchema = mongoose.Schema({
@@ -19,6 +18,13 @@ const vendorSchema = mongoose.Schema({
     type: String,
     required: false,
   },
+  products: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: false,
+    },
+  ],
 });
 
 module.exports = mongoose.model('Vendor', vendorSchema);

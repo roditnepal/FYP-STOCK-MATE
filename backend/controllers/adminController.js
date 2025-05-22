@@ -26,6 +26,8 @@ const createUser = asyncHandler(async (req, res) => {
   const { name, email, password, role, categories, phone, bio } = req.body;
   let fileData = {};
 
+  console.log(req.body);
+
   // Handle Image Upload
   if (req.file) {
     // Assuming Cloudinary is configured globally or accessible here
@@ -65,15 +67,12 @@ const createUser = asyncHandler(async (req, res) => {
     throw new Error("User already exists");
   }
 
-  // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
 
   // Create user
   const user = await User.create({
     name,
     email,
-    password: hashedPassword,
+    password,
     role: role || "employee",
     categories: categories || [],
     phone: phone || "",

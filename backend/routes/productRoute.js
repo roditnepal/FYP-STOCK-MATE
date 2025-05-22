@@ -9,12 +9,16 @@ const {
   getExpiringProducts,
   getLowStockProducts,
   getVendorProducts,
+  sendEmailToVendors,
 } = require("../controllers/productController");
 const { uploadMiddleware } = require("../utils/fileUpload");
-const { protect } = require("../middleWare/authMiddleware");
+const { protect, adminOnly } = require("../middleWare/authMiddleware");
 
 // Create product route
 router.post("/", protect, uploadMiddleware, createProduct);
+
+// Send email to vendors route
+router.post("/send-email", protect, adminOnly, sendEmailToVendors);
 
 // Get all products route
 router.get("/", protect, getProducts);

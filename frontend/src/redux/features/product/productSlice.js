@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import productService from "./productService";
 import { toast } from "react-toastify";
+import axios from "axios";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const initialState = {
   product: null,
@@ -89,6 +92,7 @@ export const getProduct = createAsyncThunk(
     }
   }
 );
+
 // Update product
 export const updateProduct = createAsyncThunk(
   "products/updateProduct",
@@ -100,6 +104,27 @@ export const updateProduct = createAsyncThunk(
         (error.response &&
           error.response.data &&
           error.response.data.message) ||
+        error.message ||
+        error.toString();
+      console.log(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Get vendor products
+export const getVendorProducts = createAsyncThunk(
+  "products/getVendorProducts",
+  async (vendorId, thunkAPI) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/products/vendor/${vendorId}`, {
+        withCredentials: true,
+      });
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      const message =
+        (error.response && error.response.data && error.response.data.message) ||
         error.message ||
         error.toString();
       console.log(message);
@@ -130,7 +155,6 @@ const productSlice = createSlice({
       const array = [];
       products.map((item) => {
         const { quantity } = item;
-
         return array.push(quantity);
       });
       let count = 0;
@@ -146,7 +170,6 @@ const productSlice = createSlice({
       const array = [];
       products.map((item) => {
         const { category } = item;
-
         return array.push(category);
       });
       const uniqueCategory = [...new Set(array)];
@@ -162,7 +185,6 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        console.log(action.payload);
         state.products.push(action.payload);
         toast.success("Product added successfully");
       })
@@ -179,7 +201,6 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        console.log(action.payload);
         state.products = action.payload;
       })
       .addCase(getProducts.rejected, (state, action) => {
@@ -228,6 +249,21 @@ const productSlice = createSlice({
         toast.success("Product updated successfully");
       })
       .addCase(updateProduct.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      .addCase(getVendorProducts.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getVendorProducts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.products = action.payload;
+      })
+      .addCase(getVendorProducts.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
