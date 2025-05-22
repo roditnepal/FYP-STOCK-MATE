@@ -166,3 +166,56 @@
     }
   }
 }
+
+/* Optional custom styling for react-confirm-alert pop-up */
+.react-confirm-alert-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.react-confirm-alert {
+  background: var(--color-light);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  .react-confirm-alert-body {
+    h1 {
+      color: var(--color-primary);
+      font-size: 1.8rem;
+    }
+    p {
+      color: var(--color-dark);
+      font-size: 1.4rem;
+    }
+  }
+
+  .react-confirm-alert-button-group {
+    button {
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1.4rem;
+      margin: 0 0.5rem;
+      cursor: pointer;
+
+      &:first-child {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+
+        &:hover {
+          background: var(--color-secondary);
+        }
+      }
+
+      &:last-child {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: none;
+
+        &:hover {
+          background: rgba(220, 53, 69, 0.2);
+        }
+      }
+    }
+  }
+}

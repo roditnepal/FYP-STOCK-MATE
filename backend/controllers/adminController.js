@@ -153,9 +153,11 @@ const updateUser = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error("Password should be at least 6 characters");
     }
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(req.body.password, salt);
+    // const salt = await bcrypt.genSalt(10);
+    // user.password = await bcrypt.hash(req.body.password, salt);
+    user.password = req.body.password
   }
+  console.log(user);
 
   const updatedUser = await user.save();
   res.status(200).json({

@@ -26,20 +26,38 @@ const createTransaction = asyncHandler(async (req, res) => {
     throw new Error("Please provide products, customer name, and total amount");
   }
 
-  // Verify user has access to all product categories
+  // Verify user has access to all product categories and check stock availability
   for (const item of products) {
     const product = await Product.findById(item.product);
-    if (product) {
-      if (
-        req.user.role !== "admin" &&
-        (!req.user.categories ||
-          !req.user.categories.includes(product.category))
-      ) {
-        res.status(403);
-        throw new Error(
-          `You don't have permission to sell product: ${product.name}`
-        );
-      }
+    if (!product) {
+      res.status(404);
+      throw new Error(`Product with ID ${item.product} not found`);
+    }
+    
+    // Check category access
+    if (
+      req.user.role !== "admin" &&
+      (!req.user.categories ||
+        !req.user.categories.includes(product.category))
+    ) {
+      res.status(403);
+      throw new Error(
+        `You don't have permission to sell product: ${product.name}`
+      );
+    }
+
+    // Check stock availability
+    const currentQuantity = parseInt(product.quantity);
+    const requestedQuantity = parseInt(item.quantity);
+    if (isNaN(currentQuantity) || isNaN(requestedQuantity)) {
+      res.status(400);
+      throw new Error(`Invalid quantity for product: ${product.name}`);
+    }
+    if (requestedQuantity > currentQuantity) {
+      res.status(400);
+      throw new Error(
+        `Insufficient stock for product: ${product.name}. Available: ${currentQuantity}, Requested: ${requestedQuantity}`
+      );
     }
   }
 

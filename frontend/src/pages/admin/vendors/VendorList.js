@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash2, FiPlus, FiPackage } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 import vendorService from "../../../services/vendorService";
 import Loader from "../../../components/loader/Loader";
 import "./VendorList.scss";
@@ -38,16 +40,30 @@ const VendorList = () => {
     fetchVendors();
   }, []);
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`Are you sure you want to delete vendor: ${name}?`)) {
-      try {
-        await vendorService.deleteVendor(id);
-        toast.success("Vendor deleted successfully");
-        // Update vendors list
-        setVendors(vendors.filter((vendor) => vendor._id !== id));
-      } catch (error) {
-        toast.error("Error deleting vendor");
-      }
+  const confirmDelete = (id, name) => {
+    confirmAlert({
+      title: "Delete Vendor",
+      message: `Are you sure you want to delete vendor: ${name}?`,
+      buttons: [
+        {
+          label: "Delete",
+          onClick: () => deleteVendor(id),
+        },
+        {
+          label: "Cancel",
+        },
+      ],
+    });
+  };
+
+  const deleteVendor = async (id) => {
+    try {
+      await vendorService.deleteVendor(id);
+      toast.success("Vendor deleted successfully");
+      // Update vendors list
+      setVendors(vendors.filter((vendor) => vendor._id !== id));
+    } catch (error) {
+      toast.error("Error deleting vendor");
     }
   };
 
@@ -105,7 +121,7 @@ const VendorList = () => {
                 </Link>
                 <button
                   className="delete-btn"
-                  onClick={() => handleDelete(vendor._id, vendor.name)}
+                  onClick={() => confirmDelete(vendor._id, vendor.name)}
                 >
                   <FiTrash2 />
                 </button>

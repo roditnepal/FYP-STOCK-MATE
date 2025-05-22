@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 import Loader from "../../components/loader/Loader";
 import categoryService from "../../services/categoryService";
 import "./CategoryList.scss";
@@ -42,11 +43,21 @@ const CategoryList = () => {
     getCategories();
   }, []);
 
-  // Delete category
+  // Delete category with confirmation
   const confirmDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
-      deleteCategory(id);
-    }
+    confirmAlert({
+      title: "Delete Category",
+      message: "Are you sure you want to delete this category?",
+      buttons: [
+        {
+          label: "Delete",
+          onClick: () => deleteCategory(id),
+        },
+        {
+          label: "Cancel",
+        },
+      ],
+    });
   };
 
   const deleteCategory = async (id) => {

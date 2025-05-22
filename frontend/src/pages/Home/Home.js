@@ -8,20 +8,20 @@ import { ShowOnLogin, ShowOnLogout } from "../../components/protect/HiddenLink";
 const Home = () => {
   return (
     <div className="home">
-      <nav className="container --flex-between">
-        <div className="logo">
+      <nav className="container --flex-end">
+        {/* <div className="logo">
           <RiProductHuntLine
             size={40}
             color="#fafaff"
           />
-        </div>
+        </div> */}
 
         <ul className="home-links">
-          <ShowOnLogout>
+          {/* <ShowOnLogout>
             <li>
               <Link to="/register">Create Account</Link>
             </li>
-          </ShowOnLogout>
+          </ShowOnLogout> */}
           <ShowOnLogout>
             <li>
               <button className="--btn">

@@ -243,7 +243,8 @@ const updateUser = asyncHandler(async (req, res) => {
 const changepassword = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
-  const { oldpassword, newpassword } = req.body;
+  console.log(req.body)
+  const { oldPassword, password } = req.body;
 
   if (!user) {
     res.status(400);
@@ -251,18 +252,19 @@ const changepassword = asyncHandler(async (req, res) => {
   }
 
   // Validation
-  if (!oldpassword || !newpassword) {
+  if (!oldPassword || !password) {
     res.status(400);
     throw new Error("Please fill all the fields");
   }
 
   // Check if password matches
-  const passwordIsCorrect = await bcrypt.compare(oldpassword, user.password);
+  const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
+  console.log(passwordIsCorrect);
 
   // Save new password
   if (user && passwordIsCorrect) {
-    const salt = await bcrypt.genSalt(10); // Generate salt
-    user.password = await bcrypt.hash(newpassword, salt); // Hash new password before saving
+    user.password = password;
+    console.log(user);
     await user.save();
     res.status(200).send("Password changed successfully");
   } else {
@@ -352,8 +354,8 @@ const resetpassword = asyncHandler(async (req, res) => {
 
   // Find user
   const user = await User.findOne({ _id: userToken.userId });
-  const salt = await bcrypt.genSalt(10); // Generate salt
-  user.password = await bcrypt.hash(password, salt); // Hash password before saving
+  // const salt = await bcrypt.genSalt(10); // Generate salt
+  user.password = password // Hash password before saving
   await user.save();
 
   res.status(200).json({

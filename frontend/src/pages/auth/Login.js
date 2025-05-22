@@ -120,7 +120,7 @@ const Login = () => {
           <div className={styles.register}>
             <Link to="/">Back to Home</Link>
             <p>&nbsp;•&nbsp;</p>
-            <Link to="/register">Create Account</Link>
+            {/* <Link to="/register">Create Account</Link> */}
           </div>
         </div>
       </Card>
