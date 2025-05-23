@@ -49,6 +49,11 @@ const TransactionForm = () => {
   const [productSearch, setProductSearch] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
 
+  // Format currency
+  const formatCurrency = (amount) => {
+    return "Rs " + parseFloat(amount).toFixed(2);
+  };
+
   // Load products on component mount
   useEffect(() => {
     dispatch(getProducts());
@@ -229,7 +234,7 @@ const TransactionForm = () => {
                     onClick={() => addProduct(product)}
                   >
                     <p>{product.name}</p>
-                    <p>${Number(product.price).toFixed(2)}</p>
+                    <p>{formatCurrency(product.price)}</p>
                   </div>
                 ))}
               </div>
@@ -278,17 +283,11 @@ const TransactionForm = () => {
               </tbody>
               <tfoot>
                 <tr>
-                  <td
-                    colSpan="3"
-                    className="total-label"
-                  >
+                  <td colSpan="3" className="total-label">
                     Total Amount:
                   </td>
-                  <td
-                    colSpan="2"
-                    className="total-amount"
-                  >
-                    ${calculateTotal()}
+                  <td colSpan="2" className="total-amount">
+                    {formatCurrency(calculateTotal())}
                   </td>
                 </tr>
               </tfoot>
@@ -386,10 +385,7 @@ const TransactionForm = () => {
         </div>
 
         <div className="form-buttons">
-          <button
-            type="button"
-            onClick={() => navigate("/transactions")}
-          >
+          <button type="button" onClick={() => navigate("/transactions")}>
             Cancel
           </button>
           <button type="submit">
